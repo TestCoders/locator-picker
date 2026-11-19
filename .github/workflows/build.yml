@@ -1,0 +1,84 @@
+name: Build
+
+# Bouwt de extensie voor Chrome en Firefox vanuit dezelfde codebase (issue #22)
+# en test de MVP-functies in echte Firefox. De zips komen als artifact mee.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Bouwen (${{ matrix.browser }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chrome, firefox]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Zip bouwen
+        run: npx wxt zip -b ${{ matrix.browser }}
+
+      # Controleert de Firefox-manifest en -code met de linter van Mozilla.
+      - name: web-ext lint
+        if: matrix.browser == 'firefox'
+        run: npx web-ext lint --source-dir .output/firefox-mv3 --self-hosted
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: locator-picker-${{ matrix.browser }}
+          path: .output/locator-picker-*-${{ matrix.browser }}.zip
+          if-no-files-found: error
+          # .output begint met een punt; zonder deze optie slaat de actie die map over.
+          include-hidden-files: true
+
+  firefox-e2e:
+    name: MVP werkt in Firefox
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      # De nieuwste ESR. Let op: dat is niet de laagst ondersteunde versie
+      # (strict_min_version 140); die wordt niet apart getest.
+      - uses: browser-actions/setup-firefox@v1
+        with:
+          firefox-version: latest-esr
+
+      # Vaste versie (0.36 of nieuwer is nodig voor --allow-system-access),
+      # vóór de geckodriver van de runner-image in PATH.
+      - name: geckodriver installeren
+        env:
+          GECKODRIVER_VERSION: '0.37.1'
+        run: |
+          mkdir -p "$RUNNER_TEMP/geckodriver"
+          curl -fsSL "https://github.com/mozilla/geckodriver/releases/download/v${GECKODRIVER_VERSION}/geckodriver-v${GECKODRIVER_VERSION}-linux64.tar.gz" \
+            | tar -xz -C "$RUNNER_TEMP/geckodriver"
+          echo "$RUNNER_TEMP/geckodriver" >> "$GITHUB_PATH"
+          "$RUNNER_TEMP/geckodriver/geckodriver" --version | head -1
+
+      - run: npm ci
+
+      - name: Firefox-zip bouwen en E2E draaien
+        run: npm run test:e2e:firefox
