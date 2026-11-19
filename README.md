@@ -11,6 +11,7 @@ npm run build        # Chrome: .output/chrome-mv3
 npm run build:edge   # Edge:   .output/edge-mv3
 npm run dev          # Chrome met hot reload
 npm run typecheck
+npm test             # unit tests (Vitest)
 ```
 
 ### Laden in de browser
@@ -20,3 +21,9 @@ npm run typecheck
 3. Kies **Uitgepakte extensie laden** en selecteer `.output/chrome-mv3` (of `.output/edge-mv3`).
 
 Zie [ADR 0001](docs/adr/0001-techstack.md) voor de techstack en mapstructuur.
+
+### Gebruik
+
+Klik op het extensie-icoon om de pick-modus op de actieve tab aan te zetten; de badge toont dan **AAN**. Nogmaals klikken of **Esc** zet hem weer uit. Navigeren naar een andere pagina zet de modus ook uit.
+
+Tabs die al open stonden voordat de extensie geladen werd, moeten eerst herladen worden.

@@ -1,19 +1,41 @@
-import { isMessage, type PingResponse } from '@/shared/messages';
+import { isMessage, type Message, type ToggleResponse } from '@/shared/messages';
+
+// De background bewaart zelf geen status: het content script is de bron van
+// waarheid, de badge volgt. Zo overleeft het een herstart van de service worker.
+
+async function showState(tabId: number, active: boolean): Promise<void> {
+  await Promise.all([
+    browser.action.setBadgeText({ tabId, text: active ? 'AAN' : '' }),
+    browser.action.setTitle({
+      tabId,
+      title: active ? 'Locator Picker: pick-modus aan (Esc om te stoppen)' : 'Locator Picker',
+    }),
+  ]);
+}
 
 export default defineBackground(() => {
-  console.log('[locator-picker] background gestart', { id: browser.runtime.id });
+  void browser.action.setBadgeBackgroundColor({ color: '#1d76db' });
 
-  browser.runtime.onMessage.addListener((message: unknown, sender, sendResponse) => {
-    if (!isMessage(message)) return;
-
-    if (message.type === 'HELLO') {
-      console.log('[locator-picker] hello van content script', sender.tab?.url);
-      return;
+  browser.action.onClicked.addListener(async (tab) => {
+    if (tab.id === undefined) return;
+    try {
+      const message: Message = { type: 'TOGGLE_PICK_MODE' };
+      const response = (await browser.tabs.sendMessage(tab.id, message)) as ToggleResponse;
+      await showState(tab.id, response.active);
+    } catch {
+      // Geen content script op deze pagina (chrome://, Web Store, of een tab
+      // die al open stond voordat de extensie geladen werd).
+      await showState(tab.id, false);
     }
+  });
 
-    if (message.type === 'PING') {
-      const response: PingResponse = { type: 'PONG', from: 'background' };
-      sendResponse(response);
-    }
+  browser.runtime.onMessage.addListener((message: unknown, sender) => {
+    if (!isMessage(message) || message.type !== 'PICK_MODE_CHANGED') return;
+    if (sender.tab?.id !== undefined) void showState(sender.tab.id, message.active);
+  });
+
+  // Nieuwe pagina in de tab: het nieuwe content script start altijd uit.
+  browser.tabs.onUpdated.addListener((tabId, changeInfo) => {
+    if (changeInfo.status === 'loading') void showState(tabId, false);
   });
 });
