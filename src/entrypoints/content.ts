@@ -5,6 +5,7 @@ import { buildResult } from '@/content/result-data';
 import { ResultPanel } from '@/content/result-panel';
 import { SelectionHighlight } from '@/content/selection-highlight';
 import { buildLocator } from '@/engine/locator-engine';
+import { assessStability } from '@/engine/stability';
 import {
   isMessage,
   type Message,
@@ -17,6 +18,7 @@ export default defineContentScript({
   matches: ['<all_urls>'],
   main(ctx) {
     const locatorOf = (el: Element) => buildLocator(el).locator;
+    const stabilityOf = (el: Element) => assessStability(buildLocator(el));
     const overlay = new HoverOverlay(locatorOf);
     const selection = new SelectionHighlight();
     const panel = new ResultPanel({
@@ -62,7 +64,7 @@ export default defineContentScript({
       if (message.type === 'GET_PICKED_ELEMENT') {
         const element = selection.selected;
         const response: PickedElementResponse = {
-          element: element?.isConnected ? describeElement(element, locatorOf) : null,
+          element: element?.isConnected ? describeElement(element, locatorOf, stabilityOf) : null,
         };
         sendResponse(response);
       }
