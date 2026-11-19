@@ -4,6 +4,7 @@ import { describeElement } from '@/content/picked-element';
 import { buildResult } from '@/content/result-data';
 import { ResultPanel } from '@/content/result-panel';
 import { SelectionHighlight } from '@/content/selection-highlight';
+import { testAttributeOrder } from '@/engine/dom';
 import { buildLocator } from '@/engine/locator-engine';
 import { assessStability } from '@/engine/stability';
 import {
@@ -13,12 +14,20 @@ import {
   type ToggleResponse,
 } from '@/shared/messages';
 import { PickMode } from '@/shared/pick-mode';
+import { DEFAULT_TEST_ATTRIBUTE, watchTestAttribute } from '@/shared/settings';
 
 export default defineContentScript({
   matches: ['<all_urls>'],
   main(ctx) {
-    const locatorOf = (el: Element) => buildLocator(el).locator;
-    const stabilityOf = (el: Element) => assessStability(buildLocator(el));
+    // Gekozen testattribuut vooraan (optiespagina). Een wijziging geldt direct,
+    // zonder de pagina te herladen.
+    let testAttributes = testAttributeOrder(DEFAULT_TEST_ATTRIBUTE);
+    const unwatchSettings = watchTestAttribute((value) => {
+      testAttributes = testAttributeOrder(value);
+    });
+
+    const locatorOf = (el: Element) => buildLocator(el, { testAttributes }).locator;
+    const stabilityOf = (el: Element) => assessStability(buildLocator(el, { testAttributes }));
     const overlay = new HoverOverlay(locatorOf);
     const selection = new SelectionHighlight();
     const panel = new ResultPanel({
@@ -35,8 +44,8 @@ export default defineContentScript({
       onPick: (element) => {
         const pickedAt = performance.now();
         selection.show(element);
-        panel.show(buildResult(element), pickedAt);
-        send({ type: 'ELEMENT_PICKED', element: describeElement(element, locatorOf) });
+        panel.show(buildResult(element, { testAttributes }), pickedAt);
+        send({ type: 'ELEMENT_PICKED', element: describeElement(element, locatorOf, stabilityOf) });
       },
       onDeactivate: () => {
         overlay.stop();
@@ -72,6 +81,7 @@ export default defineContentScript({
 
     // Extensie herladen of uitgeschakeld: opruimen.
     ctx.onInvalidated(() => {
+      unwatchSettings();
       pickMode.stop();
       overlay.stop();
       selection.clear();

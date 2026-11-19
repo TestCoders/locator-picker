@@ -32,6 +32,12 @@ Na de klik verschijnt rechtsonder het **resultaatpaneel** met de CSS-selector, d
 
 Tabs die al open stonden voordat de extensie geladen werd, moeten eerst herladen worden.
 
+### Opties: testattribuut
+
+Klik met de rechtermuisknop op het extensie-icoon en kies **Opties** (of via `chrome://extensions` → Locator Picker → **Details** → **Extensie-opties**). Kies daar welk testattribuut de engine als eerste gebruikt: `data-testid` (standaard), `data-cy` of `data-qa`. De keuze wordt bewaard in `chrome.storage.sync`, blijft na een herstart van de browser en geldt direct in open tabs, zonder herladen. Ontbreekt het gekozen attribuut op een element, dan probeert de engine de andere testattributen.
+
+De Playwright-snippet gebruikt `getByTestId` alleen voor `data-testid`, de standaard van Playwright. Andere attributen worden `page.locator('[data-cy="..."]')`.
+
 ## Snippets
 
 ### Playwright

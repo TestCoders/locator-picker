@@ -8,6 +8,11 @@ export const DEFAULT_TEST_ATTRIBUTES: readonly string[] = [
   'data-qa',
 ];
 
+/** Testattributen met het gekozen attribuut vooraan; de rest houdt de standaardvolgorde. */
+export function testAttributeOrder(preferred: string): string[] {
+  return [preferred, ...DEFAULT_TEST_ATTRIBUTES.filter((attr) => attr !== preferred)];
+}
+
 // Attributen die meestal betekenis hebben en niet per render veranderen.
 export const STABLE_ATTRIBUTES: readonly string[] = [
   'name',
