@@ -2,7 +2,7 @@
   "name": "locator-picker",
   "description": "Kopieer met één klik een stabiele, leesbare locator naar het clipboard.",
   "private": true,
-  "version": "0.17.0",
+  "version": "0.18.0",
   "type": "module",
   "scripts": {
     "dev": "wxt",
