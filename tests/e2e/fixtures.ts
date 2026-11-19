@@ -2,13 +2,10 @@
 // extensie geladen, en een lokale testsite.
 
 import { test as base, chromium, type BrowserContext, type Page, type Worker } from '@playwright/test';
-import { readFile } from 'node:fs/promises';
-import { createServer, type Server } from 'node:http';
-import type { AddressInfo } from 'node:net';
 import path from 'node:path';
+import { startSiteServer } from './site-server';
 
 const EXTENSION_PATH = path.resolve(import.meta.dirname, '../../.output/chrome-mv3');
-const SITE_DIR = path.resolve(import.meta.dirname, 'site');
 
 type Fixtures = {
   context: BrowserContext;
@@ -20,23 +17,11 @@ type WorkerFixtures = {
 };
 
 export const test = base.extend<Fixtures, WorkerFixtures>({
-  // Lokale http-server: content scripts draaien niet op file://-URL's zonder
-  // extra toestemming. 127.0.0.1 is een veilige context, dus het clipboard werkt.
   siteUrl: [
     async ({}, use) => {
-      const server: Server = createServer(async (req, res) => {
-        const name = req.url === '/' ? 'index.html' : path.basename(req.url ?? '');
-        try {
-          const body = await readFile(path.join(SITE_DIR, name));
-          res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' }).end(body);
-        } catch {
-          res.writeHead(404).end();
-        }
-      });
-      await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
-      const { port } = server.address() as AddressInfo;
-      await use(`http://127.0.0.1:${port}/`);
-      await new Promise((resolve) => server.close(resolve));
+      const server = await startSiteServer();
+      await use(server.url);
+      await server.close();
     },
     { scope: 'worker' },
   ],

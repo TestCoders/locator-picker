@@ -7,12 +7,14 @@ Vereist Node.js 20+ en npm.
 
 ```sh
 npm install
-npm run build        # Chrome: .output/chrome-mv3
-npm run build:edge   # Edge:   .output/edge-mv3
-npm run dev          # Chrome met hot reload
+npm run build            # Chrome: .output/chrome-mv3
+npm run build:edge       # Edge:   .output/edge-mv3
+npm run build:firefox    # Firefox: .output/firefox-mv3
+npm run dev              # Chrome met hot reload
 npm run typecheck
-npm test             # unit tests (Vitest)
-npm run test:e2e     # E2E: bouwt de extensie en draait Playwright
+npm test                 # unit tests (Vitest)
+npm run test:e2e         # E2E: bouwt de extensie en draait Playwright
+npm run test:e2e:firefox # E2E in Firefox (Selenium + geckodriver)
 ```
 
 ### Laden in de browser
@@ -20,6 +22,8 @@ npm run test:e2e     # E2E: bouwt de extensie en draait Playwright
 1. Draai `npm run build` (of `npm run build:edge`).
 2. Open `chrome://extensions` (of `edge://extensions`) en zet **Ontwikkelaarsmodus** aan.
 3. Kies **Uitgepakte extensie laden** en selecteer `.output/chrome-mv3` (of `.output/edge-mv3`).
+
+**Firefox** (140 of nieuwer): draai `npm run build:firefox`, open `about:debugging#/runtime/this-firefox`, kies **Tijdelijke add-on laden…** en selecteer `.output/firefox-mv3/manifest.json`. Zie [docs/firefox.md](docs/firefox.md) voor de verschillen met Chrome.
 
 Zie [ADR 0001](docs/adr/0001-techstack.md) voor de techstack en mapstructuur. Een demo-script met verwachte uitkomsten en de 1.0-checklist staan in [docs/demo.md](docs/demo.md).
 
