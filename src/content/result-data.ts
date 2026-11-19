@@ -1,6 +1,7 @@
 // Verzamelt alles wat het resultaatpaneel toont voor één gekozen element.
 
 import { cssSelector } from '@/engine/css';
+import { missingHookWarning, type HookWarning } from '@/engine/hook-warning';
 import { buildLocator, type LocatorStrategy } from '@/engine/locator-engine';
 import { playwrightSnippet } from '@/engine/snippets/playwright';
 import { countMatches, queryRootOf } from '@/engine/validate';
@@ -28,6 +29,8 @@ export type PanelResult = {
   strategy: LocatorStrategy;
   entries: ResultEntry[];
   stability?: Stability;
+  /** Gezet als het element geen testattribuut, id of toegankelijke naam heeft. */
+  warning?: HookWarning;
   /** Rekentijd voor alle locators (ms). */
   durationMs: number;
 };
@@ -62,6 +65,7 @@ export function buildResult(element: Element, options: BuildResultOptions = {}):
     text: text.length > MAX_TEXT ? `${text.slice(0, MAX_TEXT - 1)}…` : text,
     strategy: best.strategy,
     entries,
+    warning: missingHookWarning(element) ?? undefined,
     durationMs: now() - start,
   };
 }

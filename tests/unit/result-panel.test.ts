@@ -40,6 +40,28 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
+describe('ResultPanel: testhook-waarschuwing', () => {
+  const warning = {
+    attribute: 'data-testid',
+    value: 'totaal',
+    suggestion: 'data-testid="totaal"',
+    message: 'Dit element heeft geen testattribuut, id of toegankelijke naam; voeg data-testid="totaal" toe.',
+  };
+
+  it('toont de waarschuwing met het voorgestelde attribuut', () => {
+    createPanel().show({ ...RESULT, warning });
+    const note = root().querySelector('.warning');
+    expect(note?.getAttribute('role')).toBe('note');
+    expect(note?.textContent).toContain('Testhook ontbreekt');
+    expect(note?.textContent).toContain('data-testid="totaal"');
+  });
+
+  it('toont niets zonder waarschuwing', () => {
+    createPanel().show(RESULT);
+    expect(root().querySelector('.warning')).toBeNull();
+  });
+});
+
 describe('ResultPanel: inhoud', () => {
   it('toont CSS, XPath en snippet, elk met een eigen kopieerknop', () => {
     createPanel().show(RESULT);

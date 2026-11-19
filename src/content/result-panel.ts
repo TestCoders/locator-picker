@@ -42,6 +42,7 @@ const STYLE = `
   .stability[data-level='green'] { color: #188038; }
   .stability[data-level='orange'] { color: #b06000; }
   .stability[data-level='red'] { color: #c5221f; }
+  .warning { margin: 0 0 10px; padding: 6px 8px; border-radius: 4px; background: #fef7e0; color: #b06000; }
   .row { display: grid; grid-template-columns: 1fr auto; gap: 4px 8px; padding: 8px 0; border-top: 1px solid #e0e0e0; }
   .label { font-weight: 600; }
   .count { color: #5f6368; font-weight: normal; }
@@ -80,6 +81,7 @@ const STYLE = `
     .element, .meta, .count { color: #9aa0a6; }
     code { background: #303134; }
     .row { border-color: #3c4043; }
+    .warning { background: #3c3118; color: #fdd663; }
     button.close { color: #9aa0a6; }
     button.close:hover { background: #303134; }
   }
@@ -174,6 +176,13 @@ export class ResultPanel {
       );
     }
     panel.append(meta);
+
+    if (result.warning) {
+      // Tekst en icoon, niet alleen kleur; role=note zodat een screenreader het voorleest.
+      panel.append(
+        el('p', { class: 'warning', role: 'note' }, `⚠ Testhook ontbreekt: ${result.warning.message}`),
+      );
+    }
 
     for (const entry of result.entries) panel.append(this.renderEntry(entry));
 
