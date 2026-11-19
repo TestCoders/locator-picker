@@ -4,6 +4,7 @@ import { cssSelector } from '@/engine/css';
 import { missingHookWarning, type HookWarning } from '@/engine/hook-warning';
 import { buildLocator, type LocatorStrategy } from '@/engine/locator-engine';
 import { playwrightSnippet } from '@/engine/snippets/playwright';
+import { assessStability } from '@/engine/stability';
 import { countMatches, queryRootOf } from '@/engine/validate';
 import { xpathSelector } from '@/engine/xpath';
 
@@ -65,6 +66,7 @@ export function buildResult(element: Element, options: BuildResultOptions = {}):
     text: text.length > MAX_TEXT ? `${text.slice(0, MAX_TEXT - 1)}…` : text,
     strategy: best.strategy,
     entries,
+    stability: assessStability(best),
     warning: missingHookWarning(element) ?? undefined,
     durationMs: now() - start,
   };
