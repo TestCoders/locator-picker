@@ -2,7 +2,8 @@
 
 export type Message =
   | { type: 'PING'; from: 'popup' | 'background' }
-  | { type: 'HELLO'; from: 'content' };
+  | { type: 'HELLO'; from: 'content' }
+  | { type: 'PICK_MODE'; enabled: boolean };
 
 export type PingResponse = { type: 'PONG'; from: 'content' | 'background'; url?: string };
 
@@ -11,6 +12,6 @@ export function isMessage(value: unknown): value is Message {
     typeof value === 'object' &&
     value !== null &&
     'type' in value &&
-    (value.type === 'PING' || value.type === 'HELLO')
+    (value.type === 'PING' || value.type === 'HELLO' || value.type === 'PICK_MODE')
   );
 }
