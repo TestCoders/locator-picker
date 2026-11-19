@@ -21,7 +21,7 @@ npm run test:e2e     # E2E: bouwt de extensie en draait Playwright
 2. Open `chrome://extensions` (of `edge://extensions`) en zet **Ontwikkelaarsmodus** aan.
 3. Kies **Uitgepakte extensie laden** en selecteer `.output/chrome-mv3` (of `.output/edge-mv3`).
 
-Zie [ADR 0001](docs/adr/0001-techstack.md) voor de techstack en mapstructuur.
+Zie [ADR 0001](docs/adr/0001-techstack.md) voor de techstack en mapstructuur. Een demo-script met verwachte uitkomsten en de 1.0-checklist staan in [docs/demo.md](docs/demo.md).
 
 ### Gebruik
 
@@ -89,4 +89,4 @@ We volgen [semantic versioning](https://semver.org). Elke gemergde pull request 
 
 De workflow `.github/workflows/version.yml` draait bij elke push naar `main`, verhoogt `version` in `package.json` en `package-lock.json`, commit als `chore(release): vX.Y.0` en zet de tag `vX.Y.0`. De manifest-versie van de extensie komt uit `package.json`. Verhoog de versie dus niet zelf in een pull request.
 
-Een patch- of major-versie hoog je handmatig op met `npm version patch` of `npm version major` in een eigen commit op `main`.
+Een patch- of major-versie hoog je handmatig op met `npm version patch` of `npm version major` in een eigen commit op `main`. De stappen voor **1.0** staan in [docs/demo.md](docs/demo.md#versie-10-taggen).
