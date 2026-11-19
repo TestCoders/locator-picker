@@ -28,6 +28,8 @@ describe('buildLocator: testattribuut', () => {
     render('<button id="save" data-testid="save-btn">Opslaan</button>');
     expect(buildLocator($('button'))).toEqual({
       strategy: 'test-attribute',
+      attribute: 'data-testid',
+      value: 'save-btn',
       locator: '[data-testid="save-btn"]',
       matches: 1,
     });
@@ -47,14 +49,14 @@ describe('buildLocator: testattribuut', () => {
   it('slaat een niet-uniek testattribuut over en valt terug op id', () => {
     render('<button id="a" data-testid="dup">A</button><button data-testid="dup">B</button>');
     const result = buildLocator($('#a'));
-    expect(result).toEqual({ strategy: 'id', locator: '#a', matches: 1 });
+    expect(result).toEqual({ strategy: 'id', id: 'a', locator: '#a', matches: 1 });
   });
 });
 
 describe('buildLocator: id', () => {
   it('gebruikt id als er geen testattribuut is', () => {
     render('<div id="main"><span>x</span></div>');
-    expect(buildLocator($('#main'))).toEqual({ strategy: 'id', locator: '#main', matches: 1 });
+    expect(buildLocator($('#main'))).toEqual({ strategy: 'id', id: 'main', locator: '#main', matches: 1 });
   });
 
   it('gebruikt een attribuutselector voor ids met speciale tekens', () => {
@@ -68,7 +70,13 @@ describe('buildLocator: id', () => {
   it('slaat een dubbel id over en valt terug op rol + naam', () => {
     render('<button id="x">Eerste</button><button id="x">Tweede</button>');
     const result = buildLocator(nth('button', 1));
-    expect(result).toEqual({ strategy: 'role-name', locator: 'role=button[name="Tweede"]', matches: 1 });
+    expect(result).toEqual({
+      strategy: 'role-name',
+      role: 'button',
+      name: 'Tweede',
+      locator: 'role=button[name="Tweede"]',
+      matches: 1,
+    });
   });
 });
 
@@ -77,6 +85,8 @@ describe('buildLocator: rol + naam', () => {
     render('<button>Opslaan</button><button>Annuleren</button>');
     expect(buildLocator(nth('button', 1))).toEqual({
       strategy: 'role-name',
+      role: 'button',
+      name: 'Annuleren',
       locator: 'role=button[name="Annuleren"]',
       matches: 1,
     });
