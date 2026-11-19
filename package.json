@@ -12,11 +12,16 @@
     "zip": "wxt zip",
     "typecheck": "wxt prepare && tsc --noEmit",
     "postinstall": "wxt prepare",
-    "test": "vitest run"
+    "test": "vitest run",
+    "lint": "eslint ."
   },
   "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "eslint": "10.14.0",
+    "globals": "17.14.0",
     "happy-dom": "21.0.4",
-    "typescript": "7.0.2",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.72.1",
     "vitest": "5.1.1",
     "wxt": "0.21.5"
   }
