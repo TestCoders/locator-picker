@@ -9,23 +9,20 @@
 //
 // Pure functie: alleen DOM-API's, geen extensie-API's.
 
+import {
+  DEFAULT_TEST_ATTRIBUTES,
+  STABLE_ATTRIBUTES,
+  queryRootOf,
+  siblingsOf,
+  type QueryRoot,
+} from './dom';
+
+export { DEFAULT_TEST_ATTRIBUTES };
+
 export interface CssSelectorOptions {
   /** Testattributen in volgorde van voorkeur. */
   testAttributes?: readonly string[];
 }
-
-export const DEFAULT_TEST_ATTRIBUTES: readonly string[] = [
-  'data-testid',
-  'data-test-id',
-  'data-test',
-  'data-cy',
-  'data-qa',
-];
-
-// Attributen die meestal betekenis hebben en niet per render veranderen.
-const STABLE_ATTRIBUTES = ['name', 'role', 'aria-label', 'placeholder', 'title', 'alt', 'for', 'type'];
-
-type QueryRoot = Document | DocumentFragment;
 
 export function cssSelector(el: Element, options: CssSelectorOptions = {}): string {
   const testAttributes = options.testAttributes ?? DEFAULT_TEST_ATTRIBUTES;
@@ -113,10 +110,7 @@ function stepCandidates(el: Element, testAttributes: readonly string[]): string[
 
 /** Kortste stap die het element onderscheidt van zijn siblings. */
 function siblingStep(el: Element, testAttributes: readonly string[]): string {
-  // parentNode, niet parentElement: direct onder een shadow root is er geen
-  // parent-element, maar wel siblings.
-  const parent = el.parentNode as ParentNode | null;
-  const siblings = parent ? Array.from(parent.children) : [el];
+  const siblings = siblingsOf(el);
   const candidates = stepCandidates(el, testAttributes);
 
   for (const candidate of candidates) {
@@ -152,16 +146,6 @@ function isUnstableClass(cls: string): boolean {
 function matchesOnly(root: QueryRoot, selector: string, el: Element): boolean {
   const matches = root.querySelectorAll(selector);
   return matches.length === 1 && matches[0] === el;
-}
-
-function queryRootOf(el: Element): QueryRoot {
-  // Document of shadow root; een los (niet gekoppeld) element valt terug op
-  // het document zelf.
-  const root = el.getRootNode();
-  if (root.nodeType === Node.DOCUMENT_NODE || root.nodeType === Node.DOCUMENT_FRAGMENT_NODE) {
-    return root as QueryRoot;
-  }
-  return el.ownerDocument;
 }
 
 export function attributeSelector(attr: string, value: string): string {
