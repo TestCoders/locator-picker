@@ -14,7 +14,7 @@
          lookalike, zodat een te losse locator meer dan één element vindt. -->
     <section>
       <h1>Inloggen</h1>
-      <form onsubmit="return false">
+      <form onsubmit="document.title = 'verstuurd'; return false">
         <label>E-mail <input id="email" type="email" /></label>
         <button type="submit" data-testid="login">Inloggen</button>
         <button type="button">Annuleren</button>
@@ -24,6 +24,8 @@
     <nav>
       <a href="#home">Home</a>
       <a href="#over">Over ons</a>
+      <!-- Bevat 'Over ons' als deeltekst: zonder exact: true vindt getByRole beide links. -->
+      <a href="#team">Over ons team</a>
     </nav>
 
     <section>
