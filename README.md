@@ -37,6 +37,8 @@ Na de klik verschijnt rechtsonder het **resultaatpaneel** met de CSS-selector, d
 
 Tabs die al open stonden voordat de extensie geladen werd, moeten eerst herladen worden.
 
+Elementen in **open shadow roots** en **same-origin iframes** zijn ook te kiezen. Het paneel toont dan de context (bijvoorbeeld *In iframe #checkout*), en de Playwright-snippet bevat die keten: `page.frameLocator('#checkout').getByTestId('pay')`. Gesloten shadow roots en cross-origin iframes zijn niet te bereiken; zie [docs/shadow-dom-iframes.md](docs/shadow-dom-iframes.md) voor de details en beperkingen.
+
 ### Opties: testattribuut
 
 Klik met de rechtermuisknop op het extensie-icoon en kies **Opties** (of via `chrome://extensions` → Locator Picker → **Details** → **Extensie-opties**). Kies daar welk testattribuut de engine als eerste gebruikt: `data-testid` (standaard), `data-cy` of `data-qa`. De keuze wordt bewaard in `chrome.storage.sync`, blijft na een herstart van de browser en geldt direct in open tabs, zonder herladen. Ontbreekt het gekozen attribuut op een element, dan probeert de engine de andere testattributen.

@@ -6,6 +6,7 @@
 //
 // Pure functie: geen DOM- of extensie-API's.
 
+import type { ContextStep } from '../context';
 import type { LocatorResult } from '../locator-engine';
 
 export type PlaywrightSnippetOptions = {
@@ -41,6 +42,40 @@ export function playwrightSnippet(result: LocatorResult, options: PlaywrightSnip
       // werkt ook voor absolute paden als `/html/body/...`.
       return `page.locator(${jsString(`xpath=${result.locator}`)})`;
   }
+}
+
+export type ScopedSnippetOptions = PlaywrightSnippetOptions & {
+  /**
+   * CSS-selector van het element binnen zijn eigen root. Nodig in een shadow
+   * root: Playwright gaat met CSS en getBy* wel door open shadow roots heen,
+   * maar met XPath niet.
+   */
+  css?: string;
+};
+
+/**
+ * Snippet met de context van het element (#23): iframes via `frameLocator`,
+ * open shadow roots via `locator(host)`, bijv.
+ * `page.frameLocator('#checkout').locator('my-card').getByTestId('buy')`.
+ * Zonder context is dit gelijk aan playwrightSnippet.
+ */
+export function scopedPlaywrightSnippet(
+  context: readonly ContextStep[],
+  result: LocatorResult,
+  options: ScopedSnippetOptions = {},
+): string {
+  let scope = 'page';
+  for (const step of context) {
+    scope += step.kind === 'frame' ? `.frameLocator(${jsString(step.selector)})` : `.locator(${jsString(step.selector)})`;
+  }
+
+  const inShadowRoot = context.at(-1)?.kind === 'shadow';
+  const snippet =
+    inShadowRoot && result.strategy === 'xpath' && options.css
+      ? `page.locator(${jsString(options.css)})`
+      : playwrightSnippet(result, options);
+  // Elke snippet begint met `page.`; vervang dat door de scope.
+  return scope + snippet.slice('page'.length);
 }
 
 /** JavaScript-stringliteral tussen enkele aanhalingstekens. */

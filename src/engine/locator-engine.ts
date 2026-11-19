@@ -2,6 +2,7 @@
 // Volgorde: testattribuut, id, rol + toegankelijke naam, structurele XPath.
 
 import { getAccessibleName, getRole } from './accessibility';
+import { queryRootOf } from './dom';
 import { countMatches, type MatchableLocator } from './match';
 
 export type LocatorStrategy = 'test-attribute' | 'id' | 'role-name' | 'xpath';
@@ -79,19 +80,27 @@ function* candidates(el: Element, options: LocatorOptions): Generator<Candidate>
   }
 }
 
-/** Absolute pad vanaf de root; een index alleen als er meerdere zusters met dezelfde tag zijn. */
+/**
+ * Absolute pad vanaf de root; een index alleen als er meerdere zusters met
+ * dezelfde tag zijn. In een shadow root (#23) relatief vanaf die root:
+ * `./div/span`, want `/` is daar het document.
+ */
 export function structuralXPath(el: Element): string {
   const parts: string[] = [];
   for (let node: Element | null = el; node; node = node.parentElement) {
     const tag = node.tagName.toLowerCase();
-    const sameTag = Array.from(node.parentElement?.children ?? []).filter((s) => s.tagName === node!.tagName);
+    // parentNode, niet parentElement: direct onder een shadow root zijn er ook zusters.
+    const siblings = Array.from((node.parentNode as ParentNode | null)?.children ?? []);
+    const sameTag = siblings.filter((s) => s.tagName === node!.tagName);
     parts.unshift(sameTag.length > 1 ? `${tag}[${sameTag.indexOf(node) + 1}]` : tag);
   }
-  return `/${parts.join('/')}`;
+  const inShadowRoot = el.getRootNode().nodeType === Node.DOCUMENT_FRAGMENT_NODE;
+  return `${inShadowRoot ? './' : '/'}${parts.join('/')}`;
 }
 
 export function buildLocator(el: Element, options: LocatorOptions = {}): LocatorResult {
-  const doc = el.ownerDocument;
+  // Het document, of de shadow root waar het element in zit (#23).
+  const doc = queryRootOf(el);
 
   for (const candidate of candidates(el, options)) {
     const matches = countMatches(doc, candidate.matchable);
@@ -103,5 +112,9 @@ export function buildLocator(el: Element, options: LocatorOptions = {}): Locator
 
   // Terugval: structureel pad, uniek omdat het elke positie vastlegt.
   const locator = structuralXPath(el);
-  return { strategy: 'xpath', locator, matches: countMatches(doc, { kind: 'xpath', expression: locator }) };
+  // Browsers evalueren geen XPath met een shadow root als context; het pad
+  // komt van het element zelf en is dus per constructie uniek.
+  const matches =
+    doc.nodeType === Node.DOCUMENT_FRAGMENT_NODE ? 1 : countMatches(doc, { kind: 'xpath', expression: locator });
+  return { strategy: 'xpath', locator, matches };
 }

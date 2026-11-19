@@ -1,4 +1,7 @@
 // Pick-modus in de pagina. Houdt alle listeners bij zodat stop() niets achterlaat.
+// Werkt ook in same-origin iframes (#23): de listeners staan in elk bereikbaar frame.
+
+import { isElement, watchFrames } from '@/content/frames';
 
 export type PickModeOptions = {
   // Wordt aangeroepen met het element onder de muis bij een linkerklik.
@@ -37,20 +40,25 @@ export class PickMode {
     this.controller = new AbortController();
     const { signal } = this.controller;
 
-    this.win.addEventListener(
-      'keydown',
-      (event) => {
-        if (event.key !== 'Escape') return;
-        event.preventDefault();
-        event.stopPropagation();
-        this.deactivate();
+    watchFrames(
+      this.win,
+      (win) => {
+        win.addEventListener(
+          'keydown',
+          (event) => {
+            if (event.key !== 'Escape') return;
+            event.preventDefault();
+            event.stopPropagation();
+            this.deactivate();
+          },
+          { capture: true, signal },
+        );
+        for (const type of BLOCKED_EVENTS) {
+          win.addEventListener(type, this.onMouseEvent, { capture: true, signal });
+        }
       },
-      { capture: true, signal },
+      signal,
     );
-
-    for (const type of BLOCKED_EVENTS) {
-      this.win.addEventListener(type, this.onMouseEvent, { capture: true, signal });
-    }
 
     // Navigeren of de pagina in de bfcache zetten: modus uit, zodat een
     // teruggezette pagina niet ongemerkt nog in pick-modus staat.
@@ -75,9 +83,11 @@ export class PickMode {
     if (event.type !== 'click' || (event as MouseEvent).button !== 0) return;
 
     // composedPath()[0] is het echte doel, ook binnen een open shadow root.
+    // isElement in plaats van instanceof: een element uit een iframe komt uit
+    // een andere realm.
     const [target] = event.composedPath();
-    const element = target instanceof Element ? target : event.target;
-    if (!(element instanceof Element)) return;
+    const element = isElement(target) ? target : event.target;
+    if (!isElement(element)) return;
 
     this.options.onPick?.(element);
     this.deactivate();

@@ -38,6 +38,7 @@ const STYLE = `
   header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
   h2 { flex: 1; margin: 0; font-size: 14px; font-weight: 600; }
   .element { margin: 0 0 4px; color: #5f6368; overflow-wrap: anywhere; }
+  .context { margin: 0 0 4px; color: #5f6368; font-size: 12px; overflow-wrap: anywhere; }
   .meta { display: flex; flex-wrap: wrap; gap: 4px 12px; margin: 0 0 10px; color: #5f6368; }
   .stability[data-level='green'] { color: #188038; }
   .stability[data-level='orange'] { color: #b06000; }
@@ -82,7 +83,7 @@ const STYLE = `
   .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
   @media (prefers-color-scheme: dark) {
     .panel { background: #202124; color: #e8eaed; }
-    .element, .meta, .count, .note { color: #9aa0a6; }
+    .element, .context, .meta, .count, .note { color: #9aa0a6; }
     code { background: #303134; }
     .row { border-color: #3c4043; }
     .warning { background: #3c3118; color: #fdd663; }
@@ -173,6 +174,13 @@ export class ResultPanel {
 
     const description = result.text ? `<${result.tagName}> “${result.text}”` : `<${result.tagName}>`;
     panel.append(el('p', { class: 'element' }, description));
+    if (result.contextLabel) {
+      // CSS en XPath gelden binnen deze context; de Playwright-snippet bevat hem al.
+      panel.append(el('p', { class: 'context' }, `In ${result.contextLabel}`));
+    }
+    if (result.inShadowRoot) {
+      panel.append(el('p', { class: 'context note' }, 'Geen XPath: XPath werkt niet binnen een shadow root.'));
+    }
 
     const meta = el('p', { class: 'meta' });
     meta.append(el('span', {}, `Strategie: ${STRATEGY_LABELS[result.strategy]}`));
