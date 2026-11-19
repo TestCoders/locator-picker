@@ -1,12 +1,12 @@
 import { HoverOverlay } from '@/content/hover-overlay';
-import { previewLocator } from '@/engine/preview-locator';
+import { buildLocator } from '@/engine/locator-engine';
 import { isMessage, type Message, type ToggleResponse } from '@/shared/messages';
 import { PickMode } from '@/shared/pick-mode';
 
 export default defineContentScript({
   matches: ['<all_urls>'],
   main(ctx) {
-    const overlay = new HoverOverlay(previewLocator);
+    const overlay = new HoverOverlay((el) => buildLocator(el).locator);
 
     const pickMode = new PickMode(window, {
       onDeactivate: () => {
