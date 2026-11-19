@@ -30,7 +30,25 @@ In pick-modus kiest een klik het element onder de muis; de klik bereikt de pagin
 
 Tabs die al open stonden voordat de extensie geladen werd, moeten eerst herladen worden.
 
-## Versies
+## Snippets
+
+### Playwright
+
+De Playwright-snippet is **TypeScript/JavaScript**: de expressie is in beide talen gelijk, dus hij werkt in Playwright Test en in losse JS/TS-scripts. Andere talen (Python, Java, .NET) volgen eventueel later.
+
+| Strategie | Snippet |
+| --- | --- |
+| `data-testid` | `page.getByTestId('save-btn')` |
+| Ander testattribuut | `page.locator('[data-cy="go"]')` |
+| Rol + naam | `page.getByRole('button', { name: 'Opslaan', exact: true })` |
+| `id` | `page.locator('#main')` |
+| XPath | `page.locator('xpath=/html/body/div/span[2]')` |
+
+- `exact: true` omdat Playwright de naam anders hoofdletterongevoelig als deeltekst matcht (`'Opslaan'` vindt dan ook `'Opslaan als'`).
+- `getByTestId` gebruikt alleen `data-testid`, de standaard van Playwright. Wie in Playwright een ander attribuut instelt met `selectors.setTestIdAttribute()`, geeft dat mee als `testIdAttribute`.
+- Argumenten zijn geëscapete JavaScript-strings tussen enkele aanhalingstekens.
+
+
 
 We volgen [semantic versioning](https://semver.org). Elke gemergde pull request levert automatisch een nieuwe **minor** versie op (`0.1.0` → `0.2.0` → `0.3.0`).
 
