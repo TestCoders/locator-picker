@@ -42,6 +42,7 @@ const STYLE = `
   .stability[data-level='green'] { color: #188038; }
   .stability[data-level='orange'] { color: #b06000; }
   .stability[data-level='red'] { color: #c5221f; }
+  .note { margin: 0 0 10px; color: #5f6368; overflow-wrap: anywhere; }
   .warning { margin: 0 0 10px; padding: 6px 8px; border-radius: 4px; background: #fef7e0; color: #b06000; }
   .row { display: grid; grid-template-columns: 1fr auto; gap: 4px 8px; padding: 8px 0; border-top: 1px solid #e0e0e0; }
   .label { font-weight: 600; }
@@ -81,7 +82,7 @@ const STYLE = `
   .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
   @media (prefers-color-scheme: dark) {
     .panel { background: #202124; color: #e8eaed; }
-    .element, .meta, .count { color: #9aa0a6; }
+    .element, .meta, .count, .note { color: #9aa0a6; }
     code { background: #303134; }
     .row { border-color: #3c4043; }
     .warning { background: #3c3118; color: #fdd663; }
@@ -192,6 +193,16 @@ export class ResultPanel {
       // Tekst en icoon, niet alleen kleur; role=note zodat een screenreader het voorleest.
       panel.append(
         el('p', { class: 'warning', role: 'note' }, `⚠ Testhook ontbreekt: ${result.warning.message}`),
+      );
+    }
+
+    if (result.ignoredClasses?.length) {
+      panel.append(
+        el(
+          'p',
+          { class: 'note', role: 'note' },
+          `Gegenereerde classes overgeslagen: ${result.ignoredClasses.join(', ')}`,
+        ),
       );
     }
 

@@ -53,3 +53,40 @@ export function watchTestAttribute(callback: (value: TestAttributeChoice) => voi
     unwatch();
   };
 }
+
+/** Gegenereerde class-namen herkennen en vermijden (issue #26). Uit bij valse positieven. */
+export const DEFAULT_DETECT_GENERATED_CLASSES = true;
+
+export const detectGeneratedClassesSetting = storage.defineItem<boolean>('sync:detectGeneratedClasses', {
+  fallback: DEFAULT_DETECT_GENERATED_CLASSES,
+});
+
+/** Een onbekende of beschadigde waarde in de opslag valt terug op de standaard. */
+export function toDetectGeneratedClasses(value: unknown): boolean {
+  return typeof value === 'boolean' ? value : DEFAULT_DETECT_GENERATED_CLASSES;
+}
+
+export async function getDetectGeneratedClasses(): Promise<boolean> {
+  return toDetectGeneratedClasses(await detectGeneratedClassesSetting.getValue());
+}
+
+export async function setDetectGeneratedClasses(value: boolean): Promise<void> {
+  await detectGeneratedClassesSetting.setValue(value);
+}
+
+/** Roept `callback` aan met de huidige keuze en bij elke wijziging. Geeft een functie om te stoppen. */
+export function watchDetectGeneratedClasses(callback: (value: boolean) => void): () => void {
+  let stopped = false;
+  let changed = false;
+  void getDetectGeneratedClasses().then((value) => {
+    if (!stopped && !changed) callback(value);
+  });
+  const unwatch = detectGeneratedClassesSetting.watch((value) => {
+    changed = true;
+    callback(toDetectGeneratedClasses(value));
+  });
+  return () => {
+    stopped = true;
+    unwatch();
+  };
+}

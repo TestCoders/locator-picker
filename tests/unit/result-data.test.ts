@@ -57,3 +57,26 @@ describe('buildResult: testhook-waarschuwing', () => {
   });
 });
 
+describe('buildResult: gegenereerde classes', () => {
+  const html = '<div id="list"><p class="css-1q2w3e title">a</p><p>b</p></div>';
+
+  it('meldt de overgeslagen gegenereerde classes en gebruikt ze niet', () => {
+    document.body.innerHTML = html;
+    const result = buildResult(document.querySelector('p')!);
+    expect(result.ignoredClasses).toEqual(['css-1q2w3e']);
+    expect(result.entries.find((e) => e.format === 'css')?.value).not.toContain('css-1q2w3e');
+  });
+
+  it('meldt niets en gebruikt de class als herkenning uit staat', () => {
+    document.body.innerHTML = '<div><p class="css-1q2w3e">a</p><p>b</p></div>';
+    const result = buildResult(document.querySelector('p')!, { detectGeneratedClasses: false });
+    expect(result.ignoredClasses).toBeUndefined();
+    expect(result.entries.find((e) => e.format === 'css')?.value).toBe('p.css-1q2w3e');
+  });
+
+  it('meldt niets als het element geen gegenereerde classes heeft', () => {
+    document.body.innerHTML = '<p class="title">a</p>';
+    expect(buildResult(document.querySelector('p')!).ignoredClasses).toEqual([]);
+  });
+});
+

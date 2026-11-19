@@ -9,6 +9,7 @@
 //
 // Pure functie: alleen DOM-API's, geen extensie-API's.
 
+import { isUnstableClass } from './class-heuristic';
 import {
   DEFAULT_TEST_ATTRIBUTES,
   STABLE_ATTRIBUTES,
@@ -22,10 +23,13 @@ export { DEFAULT_TEST_ATTRIBUTES };
 export interface CssSelectorOptions {
   /** Testattributen in volgorde van voorkeur. */
   testAttributes?: readonly string[];
+  /** Gegenereerde class-namen herkennen en vermijden (#26). Standaard aan; uit bij valse positieven. */
+  detectGeneratedClasses?: boolean;
 }
 
 export function cssSelector(el: Element, options: CssSelectorOptions = {}): string {
   const testAttributes = options.testAttributes ?? DEFAULT_TEST_ATTRIBUTES;
+  const detect = options.detectGeneratedClasses ?? true;
   const root = queryRootOf(el);
 
   // 1 en 2: een uniek anker op het element zelf.
@@ -35,7 +39,7 @@ export function cssSelector(el: Element, options: CssSelectorOptions = {}): stri
   // 3: een enkele stap die het element al uniek maakt. Een kale tag telt
   // niet: `button` is uniek tot de pagina een tweede knop krijgt.
   const tag = escapeIdentifier(el.localName);
-  for (const candidate of stepCandidates(el, testAttributes)) {
+  for (const candidate of stepCandidates(el, testAttributes, detect)) {
     if (candidate === tag && !DOCUMENT_TAGS.has(el.localName)) continue;
     if (matchesOnly(root, candidate, el)) return candidate;
   }
@@ -43,7 +47,7 @@ export function cssSelector(el: Element, options: CssSelectorOptions = {}): stri
   // 4: pad omhoog. Elke stap onderscheidt het element van zijn siblings.
   // Een uniek anker op een voorouder heeft voorrang; zonder anker nemen we
   // het kortste pad dat uniek is.
-  const path = [siblingStep(el, testAttributes)];
+  const path = [siblingStep(el, testAttributes, detect)];
   let fallback: string | null = null;
   for (let node = el.parentElement; node; node = node.parentElement) {
     const ancestorAnchor = uniqueAnchor(node, root, testAttributes);
@@ -55,7 +59,7 @@ export function cssSelector(el: Element, options: CssSelectorOptions = {}): stri
       }
     }
 
-    path.unshift(siblingStep(node, testAttributes));
+    path.unshift(siblingStep(node, testAttributes, detect));
     const selector = path.join(' > ');
     if (!fallback && matchesOnly(root, selector, el)) fallback = selector;
   }
@@ -83,7 +87,7 @@ function uniqueAnchor(el: Element, root: QueryRoot, testAttributes: readonly str
 }
 
 /** Selectors voor één stap, van meest naar minst stabiel. */
-function stepCandidates(el: Element, testAttributes: readonly string[]): string[] {
+function stepCandidates(el: Element, testAttributes: readonly string[], detect: boolean): string[] {
   const tag = escapeIdentifier(el.localName);
   const candidates: string[] = [];
 
@@ -97,7 +101,7 @@ function stepCandidates(el: Element, testAttributes: readonly string[]): string[
     if (value) candidates.push(`${tag}${attributeSelector(attr, value)}`);
   }
 
-  const classes = stableClasses(el);
+  const classes = stableClasses(el, detect);
   for (const cls of classes) candidates.push(`${tag}.${escapeIdentifier(cls)}`);
   const [first, second] = classes;
   if (first && second) {
@@ -109,9 +113,9 @@ function stepCandidates(el: Element, testAttributes: readonly string[]): string[
 }
 
 /** Kortste stap die het element onderscheidt van zijn siblings. */
-function siblingStep(el: Element, testAttributes: readonly string[]): string {
+function siblingStep(el: Element, testAttributes: readonly string[], detect: boolean): string {
   const siblings = siblingsOf(el);
-  const candidates = stepCandidates(el, testAttributes);
+  const candidates = stepCandidates(el, testAttributes, detect);
 
   for (const candidate of candidates) {
     if (siblings.filter((s) => s.matches(candidate)).length === 1) return candidate;
@@ -124,23 +128,8 @@ function siblingStep(el: Element, testAttributes: readonly string[]): string {
 }
 
 /** Classes die waarschijnlijk niet per build of per interactie veranderen. */
-function stableClasses(el: Element): string[] {
-  return Array.from(el.classList).filter((cls) => !isUnstableClass(cls));
-}
-
-const STATE_CLASSES = new Set([
-  'active', 'focus', 'focused', 'hover', 'selected', 'disabled',
-  'open', 'opened', 'closed', 'visible', 'hidden', 'show', 'in',
-]);
-
-function isUnstableClass(cls: string): boolean {
-  if (STATE_CLASSES.has(cls) || /^(is|has)-/.test(cls)) return true;
-  // Gegenereerde namen: CSS-modules (Button_root__x7Yz2), styled-components
-  // (sc-abc123, css-1q2w3e) of lange cijferreeksen.
-  if (/__[A-Za-z0-9_-]{5,}$/.test(cls)) return true;
-  if (/^(sc|css|jsx|emotion)-[A-Za-z0-9]+$/.test(cls)) return true;
-  if (/\d{3,}/.test(cls)) return true;
-  return false;
+function stableClasses(el: Element, detectGenerated: boolean): string[] {
+  return Array.from(el.classList).filter((cls) => !isUnstableClass(cls, { detectGenerated }));
 }
 
 function matchesOnly(root: QueryRoot, selector: string, el: Element): boolean {

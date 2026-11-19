@@ -41,6 +41,8 @@ Tabs die al open stonden voordat de extensie geladen werd, moeten eerst herladen
 
 Klik met de rechtermuisknop op het extensie-icoon en kies **Opties** (of via `chrome://extensions` → Locator Picker → **Details** → **Extensie-opties**). Kies daar welk testattribuut de engine als eerste gebruikt: `data-testid` (standaard), `data-cy` of `data-qa`. De keuze wordt bewaard in `chrome.storage.sync`, blijft na een herstart van de browser en geldt direct in open tabs, zonder herladen. Ontbreekt het gekozen attribuut op een element, dan probeert de engine de andere testattributen.
 
+Daaronder staat het vinkje **Gegenereerde class-namen**. Standaard herkent de picker classes die op een hash lijken (`css-1q2w3e`, `Button_root__x7Yz2`) en gebruikt hij ze niet in de CSS-selector; het paneel meldt welke zijn overgeslagen. Haal het vinkje weg als een class ten onrechte wordt overgeslagen. De regels en voorbeelden staan in [docs/gegenereerde-classes.md](docs/gegenereerde-classes.md).
+
 De Playwright-snippet gebruikt `getByTestId` alleen voor `data-testid`, de standaard van Playwright. Andere attributen worden `page.locator('[data-cy="..."]')`.
 
 ### Historie
