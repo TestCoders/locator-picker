@@ -60,7 +60,8 @@ jobs:
           node-version: 22
           cache: npm
 
-      # De laagst ondersteunde versie (strict_min_version 140, ESR).
+      # De nieuwste ESR. Let op: dat is niet de laagst ondersteunde versie
+      # (strict_min_version 140); die wordt niet apart getest.
       - uses: browser-actions/setup-firefox@v1
         with:
           firefox-version: latest-esr
