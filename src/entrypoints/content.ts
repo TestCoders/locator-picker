@@ -1,7 +1,7 @@
 import { HoverOverlay } from '@/content/hover-overlay';
 import { describeElement } from '@/content/picked-element';
 import { SelectionHighlight } from '@/content/selection-highlight';
-import { previewLocator } from '@/engine/preview-locator';
+import { buildLocator } from '@/engine/locator-engine';
 import {
   isMessage,
   type Message,
@@ -13,7 +13,7 @@ import { PickMode } from '@/shared/pick-mode';
 export default defineContentScript({
   matches: ['<all_urls>'],
   main(ctx) {
-    const overlay = new HoverOverlay(previewLocator);
+    const overlay = new HoverOverlay((el) => buildLocator(el).locator);
     const selection = new SelectionHighlight();
 
     // De background kan net herstarten; een gemist bericht is niet erg.
