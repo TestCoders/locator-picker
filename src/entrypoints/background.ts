@@ -36,8 +36,8 @@ export default defineBackground(() => {
 
     if (message.type === 'PICK_MODE_CHANGED') void showState(tabId, message.active);
 
-    // Het resultaatpaneel (#15) luistert ook naar ELEMENT_PICKED of vraagt het
-    // element op met GET_PICKED_ELEMENT. Tot die tijd: zichtbaar in de devtools.
+    // Het resultaatpaneel staat in de pagina (content script); hier alleen
+    // zichtbaar in de devtools van de service worker.
     if (message.type === 'ELEMENT_PICKED') {
       console.log('[locator-picker] element gekozen', message.element);
     }

@@ -1,5 +1,8 @@
 import { HoverOverlay } from '@/content/hover-overlay';
+import { copyText } from '@/content/clipboard';
 import { describeElement } from '@/content/picked-element';
+import { buildResult } from '@/content/result-data';
+import { ResultPanel } from '@/content/result-panel';
 import { SelectionHighlight } from '@/content/selection-highlight';
 import { buildLocator } from '@/engine/locator-engine';
 import {
@@ -16,13 +19,21 @@ export default defineContentScript({
     const locatorOf = (el: Element) => buildLocator(el).locator;
     const overlay = new HoverOverlay(locatorOf);
     const selection = new SelectionHighlight();
+    const panel = new ResultPanel({
+      copy: copyText,
+      // Meting voor het doel 'van klik tot clipboard binnen 3 seconden'.
+      onCopied: (format, ms) =>
+        console.info(`[locator-picker] klik tot clipboard (${format}): ${Math.round(ms)} ms`),
+    });
 
     // De background kan net herstarten; een gemist bericht is niet erg.
     const send = (message: Message) => browser.runtime.sendMessage(message).catch(() => {});
 
     const pickMode = new PickMode(window, {
       onPick: (element) => {
+        const pickedAt = performance.now();
         selection.show(element);
+        panel.show(buildResult(element), pickedAt);
         send({ type: 'ELEMENT_PICKED', element: describeElement(element, locatorOf) });
       },
       onDeactivate: () => {
@@ -37,8 +48,9 @@ export default defineContentScript({
       if (message.type === 'TOGGLE_PICK_MODE') {
         const active = pickMode.toggle();
         if (active) {
-          // Nieuwe keuze: de vorige highlight verdwijnt.
+          // Nieuwe keuze: de vorige highlight en het paneel verdwijnen.
           selection.clear();
+          panel.close();
           overlay.start();
         } else {
           overlay.stop();
@@ -61,6 +73,7 @@ export default defineContentScript({
       pickMode.stop();
       overlay.stop();
       selection.clear();
+      panel.close();
     });
   },
 });
