@@ -36,7 +36,7 @@ export default defineContentScript({
         const pickedAt = performance.now();
         selection.show(element);
         panel.show(buildResult(element), pickedAt);
-        send({ type: 'ELEMENT_PICKED', element: describeElement(element, locatorOf) });
+        send({ type: 'ELEMENT_PICKED', element: describeElement(element, locatorOf, stabilityOf) });
       },
       onDeactivate: () => {
         overlay.stop();
