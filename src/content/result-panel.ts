@@ -73,6 +73,9 @@ const STYLE = `
   button:focus-visible { outline: 3px solid #fbbc04; outline-offset: 2px; }
   button.copied { border-color: #188038; background: #188038; }
   button.failed { border-color: #c5221f; background: #c5221f; }
+  .collect-row { display: flex; gap: 8px; padding-top: 8px; border-top: 1px solid #e0e0e0; }
+  button.open-collection { border-color: #1a73e8; background: transparent; color: #1a73e8; }
+  button.open-collection:hover { background: #e8f0fe; }
   button.close { padding: 2px 8px; border-color: transparent; background: transparent; color: #5f6368; font-size: 16px; }
   button.close:hover { background: #f1f3f4; }
   .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
@@ -86,6 +89,14 @@ const STYLE = `
     button.close:hover { background: #303134; }
   }
 `;
+
+/** Acties voor het page object (#21); zonder deze opties toont het paneel de knoppen niet. */
+export type CollectActions = {
+  /** Voegt het gekozen element toe; geeft terug of het nieuw was en hoeveel er nu verzameld zijn. */
+  collect: () => Promise<{ added: boolean; count: number }>;
+  /** Opent de exportpagina. */
+  openCollection: () => void;
+};
 
 export type ResultPanelOptions = {
   /** Kopieert tekst naar het clipboard. */
@@ -116,7 +127,7 @@ export class ResultPanel {
     return this.root;
   }
 
-  show(result: PanelResult, pickedAt: number = this.now()): void {
+  show(result: PanelResult, pickedAt: number = this.now(), actions?: CollectActions): void {
     this.close();
     this.pickedAt = pickedAt;
     this.previousFocus = document.activeElement;
@@ -126,7 +137,7 @@ export class ResultPanel {
 
     const style = document.createElement('style');
     style.textContent = STYLE;
-    this.root.append(style, this.render(result));
+    this.root.append(style, this.render(result, actions));
     document.documentElement.append(this.host);
 
     // Toetsenbord: direct op de eerste kopieerknop, Tab naar de volgende.
@@ -147,7 +158,7 @@ export class ResultPanel {
     this.previousFocus = null;
   }
 
-  private render(result: PanelResult): HTMLElement {
+  private render(result: PanelResult, actions?: CollectActions): HTMLElement {
     const panel = el('section', { class: 'panel', role: 'dialog', 'aria-label': 'Locator Picker: resultaat' });
     panel.addEventListener('keydown', (event) => {
       if (event.key !== 'Escape') return;
@@ -185,10 +196,28 @@ export class ResultPanel {
     }
 
     for (const entry of result.entries) panel.append(this.renderEntry(entry));
+    if (actions) panel.append(this.renderCollect(actions));
 
     this.status = el('p', { class: 'sr-only', role: 'status', 'aria-live': 'polite' });
     panel.append(this.status);
     return panel;
+  }
+
+  private renderCollect(actions: CollectActions): HTMLElement {
+    const add = el('button', { class: 'collect', type: 'button' }, '+ Page object');
+    const open = el('button', { class: 'open-collection', type: 'button' }, 'Exporteren');
+    add.addEventListener('click', async () => {
+      try {
+        const { added, count } = await actions.collect();
+        const text = added ? `Toegevoegd (${count})` : `Staat al in de lijst (${count})`;
+        add.textContent = text;
+        if (this.status) this.status.textContent = `Page object: ${text.toLowerCase()}`;
+      } catch {
+        add.textContent = 'Toevoegen mislukt';
+      }
+    });
+    open.addEventListener('click', () => actions.openCollection());
+    return el('div', { class: 'collect-row' }, add, open);
   }
 
   private renderEntry(entry: ResultEntry): HTMLElement {
