@@ -1,5 +1,6 @@
 // Verzamelt alles wat het resultaatpaneel toont voor één gekozen element.
 
+import { generatedClassesOf } from '@/engine/class-heuristic';
 import { cssSelector } from '@/engine/css';
 import { missingHookWarning, type HookWarning } from '@/engine/hook-warning';
 import { buildLocator, type LocatorStrategy } from '@/engine/locator-engine';
@@ -32,6 +33,8 @@ export type PanelResult = {
   stability?: Stability;
   /** Gezet als het element geen testattribuut, id of toegankelijke naam heeft. */
   warning?: HookWarning;
+  /** Gegenereerde classes van het element die de locators vermijden; leeg of afwezig als er geen zijn. */
+  ignoredClasses?: string[];
   /** Rekentijd voor alle locators (ms). */
   durationMs: number;
 };
@@ -41,16 +44,18 @@ const MAX_TEXT = 60;
 export type BuildResultOptions = {
   /** Testattributen in volgorde van voorkeur; het gekozen attribuut (optiespagina) staat vooraan. */
   testAttributes?: readonly string[];
+  /** Gegenereerde class-namen herkennen en vermijden (optiespagina, #26). Standaard aan. */
+  detectGeneratedClasses?: boolean;
   now?: () => number;
 };
 
 export function buildResult(element: Element, options: BuildResultOptions = {}): PanelResult {
-  const { testAttributes } = options;
+  const { testAttributes, detectGeneratedClasses } = options;
   const now = options.now ?? (() => performance.now());
   const start = now();
   const root = queryRootOf(element);
 
-  const css = cssSelector(element, { testAttributes });
+  const css = cssSelector(element, { testAttributes, detectGeneratedClasses });
   const xpath = xpathSelector(element, { testAttributes });
   const best = buildLocator(element, { testAttributes });
 
@@ -68,6 +73,7 @@ export function buildResult(element: Element, options: BuildResultOptions = {}):
     entries,
     stability: assessStability(best),
     warning: missingHookWarning(element) ?? undefined,
+    ignoredClasses: detectGeneratedClasses === false ? undefined : generatedClassesOf(element),
     durationMs: now() - start,
   };
 }

@@ -62,6 +62,18 @@ describe('ResultPanel: testhook-waarschuwing', () => {
   });
 });
 
+describe('ResultPanel: gegenereerde classes', () => {
+  it('meldt overgeslagen gegenereerde classes', () => {
+    createPanel().show({ ...RESULT, ignoredClasses: ['css-1q2w3e', 'x7Yz2'] });
+    expect(root().querySelector('.note')?.textContent).toBe('Gegenereerde classes overgeslagen: css-1q2w3e, x7Yz2');
+  });
+
+  it('toont niets zonder gegenereerde classes', () => {
+    createPanel().show({ ...RESULT, ignoredClasses: [] });
+    expect(root().querySelector('.note')).toBeNull();
+  });
+});
+
 describe('ResultPanel: inhoud', () => {
   it('toont CSS, XPath en snippet, elk met een eigen kopieerknop', () => {
     createPanel().show(RESULT);

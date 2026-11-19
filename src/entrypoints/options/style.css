@@ -17,6 +17,10 @@ fieldset {
   border-radius: 8px;
 }
 
+fieldset + fieldset {
+  margin-top: 12px;
+}
+
 legend {
   padding: 0 4px;
   font-weight: 600;

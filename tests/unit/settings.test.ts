@@ -1,7 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fakeBrowser } from 'wxt/testing/fake-browser';
 import {
+  DEFAULT_DETECT_GENERATED_CLASSES,
   DEFAULT_TEST_ATTRIBUTE,
+  getDetectGeneratedClasses,
+  setDetectGeneratedClasses,
+  watchDetectGeneratedClasses,
   getTestAttribute,
   setTestAttribute,
   watchTestAttribute,
@@ -53,5 +57,32 @@ describe('testattribuut-instelling', () => {
 
     expect(callback).toHaveBeenLastCalledWith('data-qa');
     unwatch();
+  });
+});
+
+describe('instelling gegenereerde classes', () => {
+  it('staat standaard aan', async () => {
+    expect(DEFAULT_DETECT_GENERATED_CLASSES).toBe(true);
+    expect(await getDetectGeneratedClasses()).toBe(true);
+  });
+
+  it('bewaart uit in storage.sync', async () => {
+    await setDetectGeneratedClasses(false);
+    expect(await getDetectGeneratedClasses()).toBe(false);
+    expect(await fakeBrowser.storage.sync.get('detectGeneratedClasses')).toEqual({ detectGeneratedClasses: false });
+  });
+
+  it('valt terug op de standaard bij een beschadigde waarde', async () => {
+    await fakeBrowser.storage.sync.set({ detectGeneratedClasses: 'misschien' });
+    expect(await getDetectGeneratedClasses()).toBe(true);
+  });
+
+  it('geeft de huidige waarde en elke wijziging', async () => {
+    const seen: boolean[] = [];
+    const stop = watchDetectGeneratedClasses((v) => seen.push(v));
+    await vi.waitFor(() => expect(seen).toEqual([true]));
+    await setDetectGeneratedClasses(false);
+    await vi.waitFor(() => expect(seen.at(-1)).toBe(false));
+    stop();
   });
 });
