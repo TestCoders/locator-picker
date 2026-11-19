@@ -1,6 +1,6 @@
 # Stabiliteitsindicator: criteria
 
-- Status: Voorgesteld (wacht op goedkeuring van het team)
+- Status: Goedgekeurd
 - Datum: 2026-11-19
 - Issue: #13
 
@@ -78,4 +78,4 @@ Elke positie-selector is **rood**, ook wanneer de rest van het pad stabiel is (`
 
 ## Goedkeuring
 
-- [ ] Team heeft de tabel, de uitlegzinnen en de randgevallen beoordeeld.
+- [x] Team heeft de tabel, de uitlegzinnen en de randgevallen beoordeeld.
