@@ -46,6 +46,8 @@ jobs:
           name: locator-picker-${{ matrix.browser }}
           path: .output/locator-picker-*-${{ matrix.browser }}.zip
           if-no-files-found: error
+          # .output begint met een punt; zonder deze optie slaat de actie die map over.
+          include-hidden-files: true
 
   firefox-e2e:
     name: MVP werkt in Firefox
