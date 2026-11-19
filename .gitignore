@@ -158,3 +158,5 @@ vite.config.ts.timestamp-*
 
 # WXT
 .wxt/
+
+package-lock.json
