@@ -22,6 +22,13 @@ describe('buildResult', () => {
     ]);
   });
 
+  it('geeft de stabiliteitsindicator mee voor het paneel', () => {
+    document.body.innerHTML =
+      '<button data-testid="save">Opslaan</button><div><div><span>x</span></div><div><span>x</span></div></div>';
+    expect(buildResult(document.querySelector('button')!).stability?.level).toBe('green');
+    expect(buildResult(document.querySelectorAll('span')[1]!).stability?.level).toBe('red');
+  });
+
   it('elke locator vindt het element uniek, ook zonder attributen', () => {
     document.body.innerHTML = '<ul><li><span>a</span></li><li><span>b</span></li></ul>';
     const result = buildResult(document.querySelectorAll('span')[1]!);

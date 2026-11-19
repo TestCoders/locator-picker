@@ -12,6 +12,7 @@ npm run build:edge   # Edge:   .output/edge-mv3
 npm run dev          # Chrome met hot reload
 npm run typecheck
 npm test             # unit tests (Vitest)
+npm run test:e2e     # E2E: bouwt de extensie en draait Playwright
 ```
 
 ### Laden in de browser
@@ -64,6 +65,17 @@ De Selenium-snippet bestaat in **Java** en **C#**. Het team heeft voor beide gek
 Quotes, backslashes en besturingstekens worden geëscaped volgens de regels van de taal. Een locator op rol en naam heeft geen `By`-equivalent in Selenium; gebruik dan de CSS- of XPath-variant van hetzelfde element.
 
 De code staat in `src/engine/snippets/selenium.ts`.
+
+## E2E-test
+
+`npm run test:e2e` bouwt de extensie en start Chromium met de extensie geladen. De test opent een lokale testsite (`tests/e2e/site/`), zet de pick-modus aan, kiest een element, klikt in het resultaatpaneel op **Kopieer** bij de Playwright-snippet en leest het clipboard. Die snippet wordt ongewijzigd uitgevoerd in de Playwright-test en moet precies het gekozen element vinden. Voor een element zonder testattribuut, `id`, rol of naam controleert de test dat de indicator rood is.
+
+De eerste keer installeer je Chromium voor Playwright met `npx playwright install chromium`. De workflow `.github/workflows/e2e.yml` draait de test bij elke pull request; als een snippet niet werkt, faalt de workflow.
+
+Twee kanttekeningen:
+
+- Playwright kan het extensie-icoon in de werkbalk niet aanklikken. De test stuurt daarom vanuit de service worker hetzelfde bericht (`TOGGLE_PICK_MODE`) dat de klik op het icoon verstuurt.
+- Het paneel staat in een gesloten shadow root. De test leest het uit via het Chrome DevTools Protocol en klikt de kopieerknop aan met de muis op de echte positie.
 
 ## Versies
 
