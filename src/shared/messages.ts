@@ -5,6 +5,8 @@
 export type PickedElement = {
   tagName: string;
   locator: string;
+  /** Aantal elementen dat `locator` in de pagina vindt; 1 betekent uniek. */
+  matchCount: number;
   text: string;
 };
 
