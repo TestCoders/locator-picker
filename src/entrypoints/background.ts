@@ -1,3 +1,4 @@
+import { handleCollectionMessage } from '@/shared/collection';
 import { isMessage, type Message, type ToggleResponse } from '@/shared/messages';
 
 // De background bewaart zelf geen status: het content script is de bron van
@@ -29,8 +30,20 @@ export default defineBackground(() => {
     }
   });
 
+  // Page object (#21): alle wijzigingen aan de verzameling, één voor één.
+  browser.runtime.onMessage.addListener((message: unknown, _sender, sendResponse) =>
+    handleCollectionMessage(message, sendResponse),
+  );
+
   browser.runtime.onMessage.addListener((message: unknown, sender) => {
     if (!isMessage(message)) return;
+
+    // Content scripts kunnen geen extensiepagina openen; de background wel.
+    if (message.type === 'OPEN_COLLECTION') {
+      void browser.tabs.create({ url: browser.runtime.getURL('/collection.html') });
+      return;
+    }
+
     const tabId = sender.tab?.id;
     if (tabId === undefined) return;
 

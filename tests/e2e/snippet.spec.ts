@@ -44,13 +44,14 @@ for (const { name, target, snippet: expected } of CASES) {
     await startPickMode(serviceWorker, page);
     const snippet = await pickAndCopySnippet(page, target(page), panel);
 
+    // Eerst de echte eis: ongewijzigd uitvoeren vindt precies het gekozen element.
+    const locator = runSnippet(snippet, page);
+    await expect(locator, `snippet ${snippet}`).toHaveCount(1);
+    expect(await locator.evaluate((el, picked) => el === picked, element)).toBe(true);
+
     // Wat in het clipboard staat, is wat het paneel toont.
     expect(snippet).toBe((await panel.read()).values.playwright);
     expect(snippet).toBe(expected);
-
-    const locator = runSnippet(snippet, page);
-    await expect(locator).toHaveCount(1);
-    expect(await locator.evaluate((el, picked) => el === picked, element)).toBe(true);
 
     expect((await panel.read()).stabilityLevel).toBe('green');
   });
@@ -71,11 +72,31 @@ test('element zonder bruikbare attributen: snippet werkt en de indicator is rood
 
   expect(snippet).toMatch(/^page\.locator\('xpath=\/html\/body\//);
   const locator = runSnippet(snippet, page);
-  await expect(locator).toHaveCount(1);
+  await expect(locator, `snippet ${snippet}`).toHaveCount(1);
   expect(await locator.evaluate((el, picked) => el === picked, element)).toBe(true);
 
   const result = await panel.read();
   expect(result.stabilityLevel).toBe('red');
   expect(result.stabilityText).toContain('Instabiel');
   expect(result.warningText).toContain('Testhook ontbreekt');
+});
+
+test('de klik in pick-modus verstuurt het formulier niet; de snippet als actie wel', async ({
+  page,
+  serviceWorker,
+  siteUrl,
+}) => {
+  await page.goto(siteUrl);
+  const title = await page.title();
+  const panel = await Panel.attach(page);
+
+  await startPickMode(serviceWorker, page);
+  const snippet = await pickAndCopySnippet(page, page.locator('button[type="submit"]'), panel);
+
+  // De klik koos het element; de pagina reageerde niet.
+  await expect(page).toHaveTitle(title);
+
+  // In een echte test is de snippet ook een actie: hij klikt de echte knop.
+  await runSnippet(snippet, page).click();
+  await expect(page).toHaveTitle('verstuurd');
 });

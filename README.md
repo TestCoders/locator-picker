@@ -43,6 +43,31 @@ Klik met de rechtermuisknop op het extensie-icoon en kies **Opties** (of via `ch
 
 De Playwright-snippet gebruikt `getByTestId` alleen voor `data-testid`, de standaard van Playwright. Andere attributen worden `page.locator('[data-cy="..."]')`.
 
+### Page object exporteren
+
+Klik in het resultaatpaneel op **+ Page object** om de Playwright-locator van het gekozen element te verzamelen. Doe dat voor zoveel elementen als je wilt, ook op andere pagina's en in andere tabs. **Exporteren** opent een pagina met alle verzamelde locators: pas daar de veldnamen en de klassenaam aan, en kopieer of download de klasse.
+
+```ts
+import type { Locator, Page } from '@playwright/test';
+
+export class LoginPage {
+  readonly page: Page;
+  readonly emailInput: Locator;
+  readonly loginButton: Locator;
+
+  constructor(page: Page) {
+    this.page = page;
+    this.emailInput = page.locator('#email');
+    this.loginButton = page.getByTestId('login');
+  }
+}
+```
+
+- De export is **Playwright in TypeScript**. Selenium volgt eventueel later.
+- Namen worden voorgesteld uit testattribuut, id of toegankelijke naam plus de rol (`loginButton`, `emailInput`). Ongeldige of dubbele namen blokkeren de export, met een melding bij het veld.
+- De lijst staat in `chrome.storage.session`: hij blijft bewaard zolang de browser open is en verdwijnt bij afsluiten.
+- Een unit test compileert de export met `tsc` tegen de types van `@playwright/test`. Een E2E-test verzamelt via het paneel, importeert de geëxporteerde klasse en gebruikt hem tegen de testsite.
+
 ## Snippets
 
 ### Playwright
