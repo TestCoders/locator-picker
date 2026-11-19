@@ -21,7 +21,12 @@ export type PanelSnapshot = {
   stabilityLevel: string | null;
   stabilityText: string;
   warningText: string | null;
+  /** Contextregel, bijv. 'In iframe #checkout' (#23), of null. */
+  contextText: string | null;
 };
+
+/** Positie van de hover-highlight in het hoofdvenster (#23). */
+export type Box = { x: number; y: number; width: number; height: number };
 
 export class Panel {
   private constructor(
@@ -43,7 +48,9 @@ export class Panel {
     }
     const stability = findAll(root, (n) => hasClass(n, 'stability'))[0];
     const warning = findAll(root, (n) => hasClass(n, 'warning'))[0];
+    const context = findAll(root, (n) => hasClass(n, 'context'))[0];
     return {
+      contextText: context ? textOf(context) : null,
       values,
       stabilityLevel: stability ? (attr(stability, 'data-level') ?? null) : null,
       stabilityText: stability ? textOf(stability) : '',
@@ -66,6 +73,17 @@ export class Panel {
     const root = await this.waitForPanel();
     const button = findAll(root, (n) => n.nodeName === 'BUTTON' && hasClass(n, 'collect'))[0];
     return button ? textOf(button) : '';
+  }
+
+  /** De hover-highlight, uit de stijl van de box in de overlay; null als die verborgen is. */
+  async overlayBox(): Promise<Box | null> {
+    const { root } = (await this.cdp.send('DOM.getDocument', { depth: -1, pierce: true })) as { root: CdpNode };
+    const host = findAll(root, (n) => n.nodeName === 'LOCATOR-PICKER-OVERLAY')[0];
+    const box = host?.shadowRoots?.[0] && findAll(host.shadowRoots[0], (n) => hasClass(n, 'box'))[0];
+    const style = box ? (attr(box, 'style') ?? '') : '';
+    if (!box || /display:\s*none/.test(style)) return null;
+    const px = (name: string) => Number(new RegExp(`${name}:\\s*(-?[\\d.]+)px`).exec(style)?.[1] ?? NaN);
+    return { x: px('left'), y: px('top'), width: px('width'), height: px('height') };
   }
 
   private async clickButton(predicate: (n: CdpNode) => boolean, description: string): Promise<void> {

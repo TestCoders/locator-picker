@@ -55,7 +55,8 @@ export default defineContentScript({
           collect: () =>
             addToCollection({
               name: suggestFieldName(namingHints(element, best)),
-              snippet: playwrightSnippet(best),
+              // Zelfde snippet als in het paneel, met iframe- en shadow-context (#23).
+              snippet: result.entries.find((e) => e.format === 'playwright')?.value ?? playwrightSnippet(best),
               description: result.text ? `<${result.tagName}> “${result.text}”` : `<${result.tagName}>`,
               pageTitle: document.title,
             }),

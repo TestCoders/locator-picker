@@ -1,9 +1,10 @@
 // Verzamelt alles wat het resultaatpaneel toont voor één gekozen element.
 
+import { contextOf, describeContext, isInShadowRoot, type ContextStep } from '@/engine/context';
 import { cssSelector } from '@/engine/css';
 import { missingHookWarning, type HookWarning } from '@/engine/hook-warning';
 import { buildLocator, type LocatorStrategy } from '@/engine/locator-engine';
-import { playwrightSnippet } from '@/engine/snippets/playwright';
+import { scopedPlaywrightSnippet } from '@/engine/snippets/playwright';
 import { assessStability } from '@/engine/stability';
 import { countMatches, queryRootOf } from '@/engine/validate';
 import { xpathSelector } from '@/engine/xpath';
@@ -34,6 +35,16 @@ export type PanelResult = {
   warning?: HookWarning;
   /** Rekentijd voor alle locators (ms). */
   durationMs: number;
+  /**
+   * Iframes en shadow roots rond het element, van buiten naar binnen (#23).
+   * CSS en XPath gelden binnen de binnenste stap; de Playwright-snippet bevat
+   * de hele keten.
+   */
+  context?: ContextStep[];
+  /** Leesbare omschrijving van `context`, bijv. `iframe #checkout › shadow root van my-card`. */
+  contextLabel?: string;
+  /** True als het element in een shadow root zit; er is dan geen XPath. */
+  inShadowRoot?: boolean;
 };
 
 const MAX_TEXT = 60;
@@ -51,13 +62,24 @@ export function buildResult(element: Element, options: BuildResultOptions = {}):
   const root = queryRootOf(element);
 
   const css = cssSelector(element, { testAttributes });
-  const xpath = xpathSelector(element, { testAttributes });
+  // XPath werkt niet binnen een shadow root: browsers evalueren het daar niet,
+  // en Playwright en Selenium gaan er met XPath niet doorheen (#23).
+  const inShadowRoot = isInShadowRoot(element);
+  const xpath = inShadowRoot ? null : xpathSelector(element, { testAttributes });
   const best = buildLocator(element, { testAttributes });
 
+  const context = contextOf(element, { testAttributes });
+  const playwright = scopedPlaywrightSnippet(context, best, { css });
+  // In een shadow root gebruikt de snippet CSS in plaats van XPath; tel dan die.
+  const cssMatches = countMatches({ kind: 'css', value: css }, root);
+  const playwrightMatches = inShadowRoot && best.strategy === 'xpath' ? cssMatches : best.matches;
+
   const entries: ResultEntry[] = [
-    { format: 'css', label: 'CSS', value: css, matches: countMatches({ kind: 'css', value: css }, root) },
-    { format: 'xpath', label: 'XPath', value: xpath, matches: countMatches({ kind: 'xpath', value: xpath }, root) },
-    { format: 'playwright', label: 'Playwright', value: playwrightSnippet(best), matches: best.matches },
+    { format: 'css', label: 'CSS', value: css, matches: cssMatches },
+    ...(xpath === null
+      ? []
+      : [{ format: 'xpath' as const, label: 'XPath', value: xpath, matches: countMatches({ kind: 'xpath', value: xpath }, root) }]),
+    { format: 'playwright', label: 'Playwright', value: playwright, matches: playwrightMatches },
   ];
 
   const text = (element.textContent ?? '').replace(/\s+/g, ' ').trim();
@@ -69,5 +91,7 @@ export function buildResult(element: Element, options: BuildResultOptions = {}):
     stability: assessStability(best),
     warning: missingHookWarning(element) ?? undefined,
     durationMs: now() - start,
+    ...(context.length > 0 && { context, contextLabel: describeContext(context) }),
+    ...(inShadowRoot && { inShadowRoot }),
   };
 }

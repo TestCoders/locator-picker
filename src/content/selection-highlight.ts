@@ -1,3 +1,5 @@
+import { rectInTop, watchFrames } from './frames';
+
 // Blijvende highlight van het gekozen element. Net als de hover-overlay in een
 // eigen shadow root met pointer-events: none, zodat de pagina er geen last van heeft.
 
@@ -38,7 +40,8 @@ export class SelectionHighlight {
 
     this.controller = new AbortController();
     const { signal } = this.controller;
-    window.addEventListener('scroll', this.schedule, { capture: true, signal });
+    // Scrollen in een iframe (#23) verschuift het element ook.
+    watchFrames(window, (win) => win.addEventListener('scroll', this.schedule, { capture: true, signal }), signal);
     window.addEventListener('resize', this.schedule, { signal });
 
     this.render();
@@ -70,7 +73,7 @@ export class SelectionHighlight {
       return;
     }
 
-    const rect = el.getBoundingClientRect();
+    const rect = rectInTop(el);
     Object.assign(this.box.style, {
       display: 'block',
       left: `${rect.left}px`,

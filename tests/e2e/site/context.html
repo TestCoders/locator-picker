@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="nl">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Shadow DOM en iframes</title>
+    <style>
+      body { font: 16px/1.5 system-ui, sans-serif; margin: 24px; }
+      iframe { display: block; width: 480px; height: 220px; margin: 16px 0; border: 6px solid #999; padding: 10px; }
+    </style>
+  </head>
+  <body>
+    <!-- Testpagina voor issue #23. Elk doel heeft een lookalike in een andere
+         context, zodat een locator zonder context meer dan één element vindt. -->
+    <h1>Winkel</h1>
+    <button data-testid="buy">Kopen (buiten de kaart)</button>
+
+    <!-- Open shadow root, met een geneste open shadow root. -->
+    <product-card>
+      <template shadowrootmode="open">
+        <h2>Fiets</h2>
+        <button data-testid="buy">Kopen</button>
+        <price-tag>
+          <template shadowrootmode="open">
+            <div><span>€ 499</span><span>€ 549</span></div>
+          </template>
+        </price-tag>
+      </template>
+    </product-card>
+
+    <!-- Gesloten shadow root: van buitenaf niet te bereiken. -->
+    <secret-box>
+      <template shadowrootmode="closed">
+        <button data-testid="secret">Geheim</button>
+      </template>
+    </secret-box>
+
+    <!-- Same-origin iframe, met daarin een shadow root en een geneste iframe. -->
+    <iframe id="checkout" title="Afrekenen" src="frame.html"></iframe>
+
+    <!-- Cross-origin iframe: localhost in plaats van 127.0.0.1 is een andere origin. -->
+    <iframe id="extern" title="Extern"></iframe>
+    <script>
+      document.getElementById('extern').src = location.href.replace('127.0.0.1', 'localhost').replace(/[^/]*$/, 'frame.html');
+    </script>
+  </body>
+</html>

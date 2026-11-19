@@ -11,16 +11,21 @@ export type MatchableLocator =
   | { kind: 'role'; role: string; name: string }
   | { kind: 'xpath'; expression: string };
 
-export function countMatches(doc: Document, locator: MatchableLocator): number {
+/**
+ * Telt binnen `root`: een document, of een shadow root (#23). Een shadow root
+ * zoekt alleen in die root, zoals Playwright een locator op de host scoped.
+ */
+export function countMatches(root: Document | DocumentFragment, locator: MatchableLocator): number {
   switch (locator.kind) {
     case 'css':
-      return doc.querySelectorAll(locator.selector).length;
+      return root.querySelectorAll(locator.selector).length;
     case 'role':
-      return Array.from(doc.querySelectorAll('*')).filter(
+      return Array.from(root.querySelectorAll('*')).filter(
         (el) => getRole(el) === locator.role && getAccessibleName(el) === locator.name,
       ).length;
     case 'xpath': {
-      const result = doc.evaluate(locator.expression, doc, null, ORDERED_NODE_SNAPSHOT_TYPE, null);
+      const doc = root.nodeType === Node.DOCUMENT_NODE ? (root as Document) : root.ownerDocument!;
+      const result = doc.evaluate(locator.expression, root, null, ORDERED_NODE_SNAPSHOT_TYPE, null);
       return result.snapshotLength;
     }
   }

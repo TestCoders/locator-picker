@@ -1,4 +1,9 @@
 // Highlight en tooltip tijdens de pick-modus.
+// Ook voor elementen in open shadow roots en same-origin iframes (#23): de
+// overlay staat in het hoofddocument, coördinaten uit een iframe worden omgerekend.
+
+import { frameOffset, isElement, rectInTop, watchFrames } from './frames';
+
 // Alles staat in een eigen shadow root met pointer-events: none, zodat de
 // paginastijl niet verandert en de overlay zelf nooit het gekozen element is.
 
@@ -39,6 +44,7 @@ export class HoverOverlay {
   private current: Element | null = null;
   private mouse = { x: 0, y: 0 };
   private frame = 0;
+  private controller: AbortController | null = null;
 
   constructor(private readonly preview: LocatorPreview) {}
 
@@ -60,19 +66,25 @@ export class HoverOverlay {
     root.append(style, this.box, this.tip);
     document.documentElement.append(this.host);
 
-    document.addEventListener('mousemove', this.onMouseMove, true);
-    document.addEventListener('mouseleave', this.onMouseLeave, true);
-    window.addEventListener('scroll', this.schedule, true);
-    window.addEventListener('resize', this.schedule);
+    this.controller = new AbortController();
+    const { signal } = this.controller;
+    watchFrames(
+      window,
+      (win) => {
+        win.document.addEventListener('mousemove', this.onMouseMove, { capture: true, signal });
+        win.addEventListener('scroll', this.schedule, { capture: true, signal });
+      },
+      signal,
+    );
+    document.addEventListener('mouseleave', this.onMouseLeave, { capture: true, signal });
+    window.addEventListener('resize', this.schedule, { signal });
   }
 
   stop(): void {
     if (!this.host) return;
 
-    document.removeEventListener('mousemove', this.onMouseMove, true);
-    document.removeEventListener('mouseleave', this.onMouseLeave, true);
-    window.removeEventListener('scroll', this.schedule, true);
-    window.removeEventListener('resize', this.schedule);
+    this.controller?.abort();
+    this.controller = null;
     cancelAnimationFrame(this.frame);
     this.host.remove();
     this.host = null;
@@ -80,10 +92,15 @@ export class HoverOverlay {
   }
 
   private readonly onMouseMove = (event: MouseEvent): void => {
-    this.mouse = { x: event.clientX, y: event.clientY };
-    const target = event.target;
-    if (target instanceof Element && target !== this.host) {
-      this.current = target;
+    // composedPath()[0]: het echte element, ook in een open shadow root.
+    const [target] = event.composedPath();
+    const element = isElement(target) ? target : event.target;
+    // Muispositie in het hoofdvenster, ook als het event uit een iframe komt.
+    const win = isElement(element) ? element.ownerDocument.defaultView : null;
+    const offset = win ? frameOffset(win) : { x: 0, y: 0 };
+    this.mouse = { x: event.clientX + offset.x, y: event.clientY + offset.y };
+    if (isElement(element) && element !== this.host) {
+      this.current = element;
     }
     this.schedule();
   };
@@ -112,7 +129,7 @@ export class HoverOverlay {
       return;
     }
 
-    const rect = el.getBoundingClientRect();
+    const rect = rectInTop(el);
     Object.assign(this.box.style, {
       display: 'block',
       left: `${rect.left}px`,
