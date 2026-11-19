@@ -30,8 +30,17 @@ export default defineBackground(() => {
   });
 
   browser.runtime.onMessage.addListener((message: unknown, sender) => {
-    if (!isMessage(message) || message.type !== 'PICK_MODE_CHANGED') return;
-    if (sender.tab?.id !== undefined) void showState(sender.tab.id, message.active);
+    if (!isMessage(message)) return;
+    const tabId = sender.tab?.id;
+    if (tabId === undefined) return;
+
+    if (message.type === 'PICK_MODE_CHANGED') void showState(tabId, message.active);
+
+    // Het resultaatpaneel (#15) luistert ook naar ELEMENT_PICKED of vraagt het
+    // element op met GET_PICKED_ELEMENT. Tot die tijd: zichtbaar in de devtools.
+    if (message.type === 'ELEMENT_PICKED') {
+      console.log('[locator-picker] element gekozen', message.element);
+    }
   });
 
   // Nieuwe pagina in de tab: het nieuwe content script start altijd uit.
