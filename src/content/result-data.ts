@@ -37,13 +37,21 @@ export type PanelResult = {
 
 const MAX_TEXT = 60;
 
-export function buildResult(element: Element, now: () => number = () => performance.now()): PanelResult {
+export type BuildResultOptions = {
+  /** Testattributen in volgorde van voorkeur; het gekozen attribuut (optiespagina) staat vooraan. */
+  testAttributes?: readonly string[];
+  now?: () => number;
+};
+
+export function buildResult(element: Element, options: BuildResultOptions = {}): PanelResult {
+  const { testAttributes } = options;
+  const now = options.now ?? (() => performance.now());
   const start = now();
   const root = queryRootOf(element);
 
-  const css = cssSelector(element);
-  const xpath = xpathSelector(element);
-  const best = buildLocator(element);
+  const css = cssSelector(element, { testAttributes });
+  const xpath = xpathSelector(element, { testAttributes });
+  const best = buildLocator(element, { testAttributes });
 
   const entries: ResultEntry[] = [
     { format: 'css', label: 'CSS', value: css, matches: countMatches({ kind: 'css', value: css }, root) },

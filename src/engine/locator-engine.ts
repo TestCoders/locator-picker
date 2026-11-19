@@ -22,7 +22,7 @@ export type LocatorDetails =
 
 export type LocatorOptions = {
   /** Attributen die als testhook gelden, in volgorde van voorkeur. */
-  testAttributes?: string[];
+  testAttributes?: readonly string[];
 };
 
 export const DEFAULT_TEST_ATTRIBUTES = ['data-testid'];

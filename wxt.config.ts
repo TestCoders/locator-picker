@@ -6,9 +6,9 @@ export default defineConfig({
   manifest: {
     name: 'Locator Picker',
     description: 'Kopieer met één klik een stabiele, leesbare locator naar het clipboard.',
-    // Minimale rechten: geen permissions nodig voor het skelet. Het content
-    // script wordt via content_scripts.matches geïnjecteerd.
-    permissions: [],
+    // Minimale rechten. Het content script wordt via content_scripts.matches
+    // geïnjecteerd; storage is nodig voor de optiespagina (testattribuut).
+    permissions: ['storage'],
     action: {
       default_title: 'Locator Picker',
     },

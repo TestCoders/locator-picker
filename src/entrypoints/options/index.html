@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="nl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Locator Picker: opties</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <main>
+      <h1>Locator Picker</h1>
+      <form id="options">
+        <fieldset>
+          <legend>Testattribuut</legend>
+          <p class="hint">
+            Het attribuut dat de locator-engine als eerste probeert. Kies de conventie van je team.
+          </p>
+          <div id="choices"></div>
+        </fieldset>
+        <p id="status" role="status" aria-live="polite"></p>
+      </form>
+    </main>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>

@@ -32,7 +32,7 @@ describe('buildResult', () => {
   it('meet de rekentijd', () => {
     document.body.innerHTML = '<p id="x">x</p>';
     let t = 0;
-    const result = buildResult(document.querySelector('p')!, () => (t += 5));
+    const result = buildResult(document.querySelector('p')!, { now: () => (t += 5) });
     expect(result.durationMs).toBe(5);
   });
 });
