@@ -172,3 +172,33 @@ describe('ResultPanel: toetsenbord', () => {
     expect(panel.open).toBe(false);
   });
 });
+
+describe('ResultPanel: page object', () => {
+  it('toont de knoppen alleen met acties', () => {
+    createPanel().show(RESULT);
+    expect(root().querySelector('button.collect')).toBeNull();
+  });
+
+  it('voegt toe en meldt het aantal; een tweede keer staat al in de lijst', async () => {
+    const collect = vi
+      .fn()
+      .mockResolvedValueOnce({ added: true, count: 3 })
+      .mockResolvedValueOnce({ added: false, count: 3 });
+    createPanel().show(RESULT, 0, { collect, openCollection: vi.fn() });
+    const button = root().querySelector<HTMLButtonElement>('button.collect')!;
+
+    button.click();
+    await vi.waitFor(() => expect(button.textContent).toBe('Toegevoegd (3)'));
+    expect(root().querySelector('[role="status"]')!.textContent).toBe('Page object: toegevoegd (3)');
+
+    button.click();
+    await vi.waitFor(() => expect(button.textContent).toBe('Staat al in de lijst (3)'));
+  });
+
+  it('opent de exportpagina', () => {
+    const openCollection = vi.fn();
+    createPanel().show(RESULT, 0, { collect: vi.fn(), openCollection });
+    root().querySelector<HTMLButtonElement>('button.open-collection')!.click();
+    expect(openCollection).toHaveBeenCalledOnce();
+  });
+});

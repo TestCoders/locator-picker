@@ -1,0 +1,93 @@
+body {
+  margin: 0;
+  font: 14px/1.5 system-ui, -apple-system, 'Segoe UI', sans-serif;
+  color: #202124;
+  background: #fff;
+}
+
+main {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+h1 { margin: 0 0 4px; font-size: 22px; }
+h2 { margin: 24px 0 8px; font-size: 16px; }
+.hint { margin: 0 0 16px; color: #5f6368; }
+
+label { font-weight: 600; }
+
+input[type='text'] {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 320px;
+  padding: 6px 8px;
+  border: 1px solid #dadce0;
+  border-radius: 4px;
+  font: 13px ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+input[aria-invalid='true'] { border-color: #c5221f; outline-color: #c5221f; }
+
+.error { margin: 4px 0 0; color: #c5221f; }
+.error:empty { display: none; }
+
+.class-name { margin-bottom: 16px; }
+
+ol.fields { margin: 0; padding: 0; list-style: none; }
+.field {
+  display: grid;
+  grid-template-columns: minmax(200px, 320px) 1fr auto;
+  gap: 4px 12px;
+  align-items: start;
+  padding: 10px 0;
+  border-top: 1px solid #e0e0e0;
+}
+.field .name { grid-column: 1; grid-row: 1 / span 2; }
+.field .description { grid-column: 2; grid-row: 1; color: #5f6368; overflow-wrap: anywhere; }
+.field code { grid-column: 2; grid-row: 2; justify-self: start; overflow-wrap: anywhere; }
+.field .remove { grid-column: 3; grid-row: 1; }
+
+code, pre {
+  font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+.field code { padding: 2px 6px; border-radius: 4px; background: #f1f3f4; }
+pre {
+  margin: 0;
+  padding: 12px;
+  overflow: auto;
+  border-radius: 6px;
+  background: #f1f3f4;
+}
+
+.actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+
+button {
+  padding: 6px 12px;
+  border: 1px solid #1a73e8;
+  border-radius: 4px;
+  background: #1a73e8;
+  color: #fff;
+  font: inherit;
+  cursor: pointer;
+}
+button:hover { background: #1765cc; }
+button:disabled { opacity: 0.5; cursor: not-allowed; }
+button:focus-visible { outline: 3px solid #fbbc04; outline-offset: 2px; }
+button.secondary { background: #fff; color: #1a73e8; }
+button.secondary:hover { background: #e8f0fe; }
+button.remove { border-color: transparent; background: transparent; color: #c5221f; }
+button.remove:hover { background: #fce8e6; }
+
+.status { min-height: 1.5em; margin: 8px 0 0; color: #188038; }
+
+@media (prefers-color-scheme: dark) {
+  body { background: #202124; color: #e8eaed; }
+  .hint, .field .description { color: #9aa0a6; }
+  input[type='text'] { background: #303134; color: #e8eaed; border-color: #5f6368; }
+  .field { border-color: #3c4043; }
+  .field code, pre { background: #303134; }
+  button.secondary { background: transparent; color: #8ab4f8; border-color: #8ab4f8; }
+  button.remove { color: #f28b82; }
+  .error { color: #f28b82; }
+  .status { color: #81c995; }
+}

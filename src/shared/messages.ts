@@ -18,7 +18,8 @@ export type Message =
   | { type: 'TOGGLE_PICK_MODE' }
   | { type: 'PICK_MODE_CHANGED'; active: boolean }
   | { type: 'ELEMENT_PICKED'; element: PickedElement }
-  | { type: 'GET_PICKED_ELEMENT' };
+  | { type: 'GET_PICKED_ELEMENT' }
+  | { type: 'OPEN_COLLECTION' };
 
 export type ToggleResponse = { active: boolean };
 
@@ -29,6 +30,7 @@ const MESSAGE_TYPES: ReadonlySet<string> = new Set<Message['type']>([
   'PICK_MODE_CHANGED',
   'ELEMENT_PICKED',
   'GET_PICKED_ELEMENT',
+  'OPEN_COLLECTION',
 ]);
 
 export function isMessage(value: unknown): value is Message {

@@ -163,3 +163,4 @@ package-lock.json
 # Playwright E2E
 test-results/
 playwright-report/
+/tests/e2e/.generated-*/
