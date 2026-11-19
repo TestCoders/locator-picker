@@ -25,6 +25,7 @@ Aantal matches gaat voor strategie. Een locator die niet precies één element o
 | `role-name` (rol + toegankelijke naam) | groen | rood | rood |
 | CSS met stabiel attribuut (`name`, `aria-label`, `placeholder`, `title`, `alt`) | oranje | rood | rood |
 | CSS met alleen stabiele class | oranje | rood | rood |
+| CSS met alleen onstabiele class (gegenereerd of state-class) | rood | rood | rood |
 | CSS/XPath met zichtbare tekst | oranje | rood | rood |
 | CSS/XPath met `nth-of-type`/positie, of absoluut pad | rood | rood | rood |
 | Geen bruikbare attributen (alleen tag en positie) | rood | rood | rood |
