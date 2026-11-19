@@ -50,7 +50,22 @@ De Playwright-snippet is **TypeScript/JavaScript**: de expressie is in beide tal
 - `getByTestId` gebruikt alleen `data-testid`, de standaard van Playwright. Wie in Playwright een ander attribuut instelt met `selectors.setTestIdAttribute()`, geeft dat mee als `testIdAttribute`.
 - Argumenten zijn geëscapete JavaScript-strings tussen enkele aanhalingstekens.
 
+### Selenium: Java en C#
 
+De Selenium-snippet bestaat in **Java** en **C#**. Het team heeft voor beide gekozen: Java is de meest gebruikte Selenium-taal, C# is gangbaar bij .NET-teams. De snippet is één regel die direct in een test past en gaat uit van een variabele `driver`.
+
+| Strategie | Java | C# |
+| --- | --- | --- |
+| Testattribuut | `driver.findElement(By.cssSelector("[data-testid=\"login\"]"))` | `driver.FindElement(By.CssSelector("[data-testid=\"login\"]"))` |
+| `id` | `driver.findElement(By.id("email"))` | `driver.FindElement(By.Id("email"))` |
+| CSS | `driver.findElement(By.cssSelector("nav > a.logout"))` | `driver.FindElement(By.CssSelector("nav > a.logout"))` |
+| XPath | `driver.findElement(By.xpath("//main/p[2]"))` | `driver.FindElement(By.XPath("//main/p[2]"))` |
+
+Quotes, backslashes en besturingstekens worden geëscaped volgens de regels van de taal. Een locator op rol en naam heeft geen `By`-equivalent in Selenium; gebruik dan de CSS- of XPath-variant van hetzelfde element.
+
+De code staat in `src/engine/snippets/selenium.ts`.
+
+## Versies
 
 We volgen [semantic versioning](https://semver.org). Elke gemergde pull request levert automatisch een nieuwe **minor** versie op (`0.1.0` → `0.2.0` → `0.3.0`).
 
