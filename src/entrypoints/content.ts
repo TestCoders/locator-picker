@@ -13,6 +13,7 @@ import {
   type PickedElementResponse,
   type ToggleResponse,
 } from '@/shared/messages';
+import { domainOf, entryFromResult, recordPick } from '@/shared/history';
 import { PickMode } from '@/shared/pick-mode';
 import { DEFAULT_TEST_ATTRIBUTE, watchTestAttribute } from '@/shared/settings';
 
@@ -44,7 +45,10 @@ export default defineContentScript({
       onPick: (element) => {
         const pickedAt = performance.now();
         selection.show(element);
-        panel.show(buildResult(element, { testAttributes }), pickedAt);
+        const result = buildResult(element, { testAttributes });
+        panel.show(result, pickedAt);
+        // Historie is een extra: een fout (bijvoorbeeld een herladen extensie) mag het paneel niet breken.
+        void recordPick(domainOf(window.location), entryFromResult(result)).catch(() => {});
         send({ type: 'ELEMENT_PICKED', element: describeElement(element, locatorOf, stabilityOf) });
       },
       onDeactivate: () => {
