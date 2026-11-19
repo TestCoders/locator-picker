@@ -1,0 +1,42 @@
+# Elke merge naar main (dus elke gemergde pull request) levert een nieuwe
+# minor versie op: package.json en package-lock.json worden opgehoogd,
+# er komt een release-commit en een tag vX.Y.0.
+name: Versie ophogen
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+# Een run tegelijk, anders lopen twee merges elkaar voorbij op dezelfde versie.
+concurrency:
+  group: versie-ophogen
+  cancel-in-progress: false
+
+jobs:
+  bump:
+    # Sla onze eigen release-commit over.
+    if: ${{ !startsWith(github.event.head_commit.message, 'chore(release):') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Altijd de nieuwste main, ook als er tijdens het wachten nog een merge was.
+          ref: main
+
+      - name: Minor versie ophogen
+        id: bump
+        run: |
+          npm version minor --no-git-tag-version
+          echo "version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
+
+      - name: Committen, taggen en pushen
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package.json package-lock.json
+          git commit -m "chore(release): v${{ steps.bump.outputs.version }}"
+          git tag "v${{ steps.bump.outputs.version }}"
+          git push origin main "v${{ steps.bump.outputs.version }}"

@@ -27,3 +27,11 @@ Zie [ADR 0001](docs/adr/0001-techstack.md) voor de techstack en mapstructuur.
 Klik op het extensie-icoon om de pick-modus op de actieve tab aan te zetten; de badge toont dan **AAN**. Nogmaals klikken of **Esc** zet hem weer uit. Navigeren naar een andere pagina zet de modus ook uit.
 
 Tabs die al open stonden voordat de extensie geladen werd, moeten eerst herladen worden.
+
+## Versies
+
+We volgen [semantic versioning](https://semver.org). Elke gemergde pull request levert automatisch een nieuwe **minor** versie op (`0.1.0` → `0.2.0` → `0.3.0`).
+
+De workflow `.github/workflows/version.yml` draait bij elke push naar `main`, verhoogt `version` in `package.json` en `package-lock.json`, commit als `chore(release): vX.Y.0` en zet de tag `vX.Y.0`. De manifest-versie van de extensie komt uit `package.json`. Verhoog de versie dus niet zelf in een pull request.
+
+Een patch- of major-versie hoog je handmatig op met `npm version patch` of `npm version major` in een eigen commit op `main`.
