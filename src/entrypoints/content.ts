@@ -5,7 +5,10 @@ import { buildResult } from '@/content/result-data';
 import { ResultPanel } from '@/content/result-panel';
 import { SelectionHighlight } from '@/content/selection-highlight';
 import { testAttributeOrder } from '@/engine/dom';
-import { buildLocator } from '@/engine/locator-engine';
+import { getAccessibleName, getRole } from '@/engine/accessibility';
+import { buildLocator, type LocatorResult } from '@/engine/locator-engine';
+import { suggestFieldName } from '@/engine/page-object/naming';
+import { playwrightSnippet } from '@/engine/snippets/playwright';
 import { assessStability } from '@/engine/stability';
 import {
   isMessage,
@@ -13,6 +16,7 @@ import {
   type PickedElementResponse,
   type ToggleResponse,
 } from '@/shared/messages';
+import { addToCollection } from '@/shared/collection';
 import { domainOf, entryFromResult, recordPick } from '@/shared/history';
 import { PickMode } from '@/shared/pick-mode';
 import { DEFAULT_TEST_ATTRIBUTE, watchTestAttribute } from '@/shared/settings';
@@ -46,7 +50,17 @@ export default defineContentScript({
         const pickedAt = performance.now();
         selection.show(element);
         const result = buildResult(element, { testAttributes });
-        panel.show(result, pickedAt);
+        const best = buildLocator(element, { testAttributes });
+        panel.show(result, pickedAt, {
+          collect: () =>
+            addToCollection({
+              name: suggestFieldName(namingHints(element, best)),
+              snippet: playwrightSnippet(best),
+              description: result.text ? `<${result.tagName}> “${result.text}”` : `<${result.tagName}>`,
+              pageTitle: document.title,
+            }),
+          openCollection: () => send({ type: 'OPEN_COLLECTION' }),
+        });
         // Historie is een extra: een fout (bijvoorbeeld een herladen extensie) mag het paneel niet breken.
         void recordPick(domainOf(window.location), entryFromResult(result)).catch(() => {});
         send({ type: 'ELEMENT_PICKED', element: describeElement(element, locatorOf, stabilityOf) });
@@ -93,3 +107,14 @@ export default defineContentScript({
     });
   },
 });
+
+/** Wat de naamgeving voor een page object-veld van een element nodig heeft. */
+function namingHints(element: Element, best: LocatorResult) {
+  return {
+    testValue: best.strategy === 'test-attribute' ? best.value : undefined,
+    id: element.id || undefined,
+    role: getRole(element),
+    name: getAccessibleName(element),
+    tagName: element.localName,
+  };
+}

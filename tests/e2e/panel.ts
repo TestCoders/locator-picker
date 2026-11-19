@@ -53,9 +53,25 @@ export class Panel {
 
   /** Klikt met de muis op de kopieerknop van een formaat, zoals een gebruiker. */
   async clickCopy(format: string): Promise<void> {
+    await this.clickButton((n) => attr(n, 'data-format') === format, `kopieerknop voor ${format}`);
+  }
+
+  /** Klikt op '+ Page object' (#21). */
+  async clickCollect(): Promise<void> {
+    await this.clickButton((n) => hasClass(n, 'collect'), 'knop + Page object');
+  }
+
+  /** Tekst van de knop '+ Page object', bijv. 'Toegevoegd (2)'. */
+  async collectText(): Promise<string> {
     const root = await this.waitForPanel();
-    const button = findAll(root, (n) => n.nodeName === 'BUTTON' && attr(n, 'data-format') === format)[0];
-    if (!button) throw new Error(`geen kopieerknop voor ${format}`);
+    const button = findAll(root, (n) => n.nodeName === 'BUTTON' && hasClass(n, 'collect'))[0];
+    return button ? textOf(button) : '';
+  }
+
+  private async clickButton(predicate: (n: CdpNode) => boolean, description: string): Promise<void> {
+    const root = await this.waitForPanel();
+    const button = findAll(root, (n) => n.nodeName === 'BUTTON' && predicate(n))[0];
+    if (!button) throw new Error(`geen ${description}`);
     await this.cdp.send('DOM.scrollIntoViewIfNeeded', { nodeId: button.nodeId });
     const { model } = await this.cdp.send('DOM.getBoxModel', { nodeId: button.nodeId });
     const [x1, y1, , , x3, y3] = model.content;
