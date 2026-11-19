@@ -28,6 +28,8 @@ Klik op het extensie-icoon om de pick-modus op de actieve tab aan te zetten; de 
 
 In pick-modus kiest een klik het element onder de muis; de klik bereikt de pagina niet, dus links, knoppen en formulieren doen niets. Het gekozen element houdt een groene highlight en de pick-modus gaat uit. Zet de modus opnieuw aan om een ander element te kiezen.
 
+Na de klik verschijnt rechtsonder het **resultaatpaneel** met de CSS-selector, de XPath en de Playwright-snippet, elk met het aantal matches en een eigen **Kopieer**-knop. De focus staat op de eerste knop: met **Tab** ga je naar de volgende, **Enter** of **Spatie** kopieert en **Esc** sluit het paneel. In de console van de pagina staat per kopie hoe lang het duurde van klik tot clipboard.
+
 Tabs die al open stonden voordat de extensie geladen werd, moeten eerst herladen worden.
 
 ## Snippets
