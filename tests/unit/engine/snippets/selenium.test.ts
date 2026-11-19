@@ -84,15 +84,22 @@ describe('escaping', () => {
 
 describe('toSeleniumLocator', () => {
   it('testattribuut blijft een CSS-selector', () => {
-    expect(toSeleniumLocator({ strategy: 'test-attribute', locator: '[data-testid="x"]', matches: 1 })).toEqual({
+    expect(
+      toSeleniumLocator({
+        strategy: 'test-attribute',
+        attribute: 'data-testid',
+        value: 'x',
+        locator: '[data-testid="x"]',
+        matches: 1,
+      }),
+    ).toEqual({
       strategy: 'test-attribute',
       selector: '[data-testid="x"]',
     });
   });
 
-  it('id-selector wordt By.id met de ruwe id', () => {
-    expect(toSeleniumLocator({ strategy: 'id', locator: '#email', matches: 1 })).toEqual({ strategy: 'id', id: 'email' });
-    expect(toSeleniumLocator({ strategy: 'id', locator: '[id="a\\"b c"]', matches: 1 })).toEqual({
+  it('id wordt By.id met de ruwe id, niet de selector', () => {
+    expect(toSeleniumLocator({ strategy: 'id', id: 'a"b c', locator: '[id="a\\"b c"]', matches: 1 })).toEqual({
       strategy: 'id',
       id: 'a"b c',
     });
@@ -106,7 +113,7 @@ describe('toSeleniumLocator', () => {
   });
 
   it('rol + naam heeft geen Selenium-equivalent', () => {
-    expect(toSeleniumLocator({ strategy: 'role-name', locator: 'role=button[name="OK"]', matches: 1 })).toBeNull();
+    expect(toSeleniumLocator({ strategy: 'role-name', role: 'button', name: 'OK', locator: 'role=button[name="OK"]', matches: 1 })).toBeNull();
   });
 });
 

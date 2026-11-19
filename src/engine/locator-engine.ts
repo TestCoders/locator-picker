@@ -7,12 +7,18 @@ import { countMatches, type MatchableLocator } from './match';
 export type LocatorStrategy = 'test-attribute' | 'id' | 'role-name' | 'xpath';
 
 export type LocatorResult = {
-  strategy: LocatorStrategy;
   /** CSS-selector, Playwright-rolselector (`role=button[name="..."]`) of XPath. */
   locator: string;
   /** Aantal elementen dat de locator in het document oplevert. */
   matches: number;
-};
+} & LocatorDetails;
+
+/** De onderdelen van de locator, zodat snippet-generators geen string hoeven te parsen. */
+export type LocatorDetails =
+  | { strategy: 'test-attribute'; attribute: string; value: string }
+  | { strategy: 'id'; id: string }
+  | { strategy: 'role-name'; role: string; name: string }
+  | { strategy: 'xpath' };
 
 export type LocatorOptions = {
   /** Attributen die als testhook gelden, in volgorde van voorkeur. */
@@ -37,21 +43,27 @@ function idSelector(id: string): string {
   return SIMPLE_IDENT.test(id) ? `#${id}` : `[id=${quote(id)}]`;
 }
 
-type Candidate = { strategy: LocatorStrategy; locator: string; matchable: MatchableLocator };
+type Candidate = LocatorDetails & { locator: string; matchable: MatchableLocator };
 
 function* candidates(el: Element, options: LocatorOptions): Generator<Candidate> {
   for (const attr of options.testAttributes ?? DEFAULT_TEST_ATTRIBUTES) {
     const value = el.getAttribute(attr);
     if (value) {
       const selector = `[${attr}=${quote(value)}]`;
-      yield { strategy: 'test-attribute', locator: selector, matchable: { kind: 'css', selector } };
+      yield {
+        strategy: 'test-attribute',
+        attribute: attr,
+        value,
+        locator: selector,
+        matchable: { kind: 'css', selector },
+      };
     }
   }
 
   const id = el.getAttribute('id');
   if (id) {
     const selector = idSelector(id);
-    yield { strategy: 'id', locator: selector, matchable: { kind: 'css', selector } };
+    yield { strategy: 'id', id, locator: selector, matchable: { kind: 'css', selector } };
   }
 
   const role = getRole(el);
@@ -59,6 +71,8 @@ function* candidates(el: Element, options: LocatorOptions): Generator<Candidate>
   if (role && name) {
     yield {
       strategy: 'role-name',
+      role,
+      name,
       locator: `role=${role}[name=${quote(name)}]`,
       matchable: { kind: 'role', role, name },
     };
@@ -82,7 +96,8 @@ export function buildLocator(el: Element, options: LocatorOptions = {}): Locator
   for (const candidate of candidates(el, options)) {
     const matches = countMatches(doc, candidate.matchable);
     if (matches === 1) {
-      return { strategy: candidate.strategy, locator: candidate.locator, matches };
+      const { matchable: _, ...result } = candidate;
+      return { ...result, matches };
     }
   }
 

@@ -59,25 +59,13 @@ export function toSeleniumLocator(result: LocatorResult): SeleniumLocator | null
   switch (result.strategy) {
     case 'test-attribute':
       return { strategy: 'test-attribute', selector: result.locator };
-    case 'id': {
-      const id = idFromSelector(result.locator);
-      // Onbekende vorm: de selector werkt hoe dan ook als CSS.
-      return id === null ? { strategy: 'css', selector: result.locator } : { strategy: 'id', id };
-    }
+    case 'id':
+      return { strategy: 'id', id: result.id };
     case 'xpath':
       return { strategy: 'xpath', expression: result.locator };
     case 'role-name':
       return null;
   }
-}
-
-/** Haalt de ruwe id uit `#login` of `[id="a\"b"]`, de vormen die de engine maakt. */
-function idFromSelector(selector: string): string | null {
-  const simple = /^#([A-Za-z_][\w-]*)$/.exec(selector);
-  if (simple) return simple[1] ?? null;
-  const quoted = /^\[id="((?:[^"\\]|\\.)*)"\]$/.exec(selector);
-  if (quoted) return (quoted[1] ?? '').replace(/\\(.)/g, '$1');
-  return null;
 }
 
 /** Java-stringliteral tussen dubbele quotes. */

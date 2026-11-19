@@ -13,7 +13,8 @@ import { PickMode } from '@/shared/pick-mode';
 export default defineContentScript({
   matches: ['<all_urls>'],
   main(ctx) {
-    const overlay = new HoverOverlay((el) => buildLocator(el).locator);
+    const locatorOf = (el: Element) => buildLocator(el).locator;
+    const overlay = new HoverOverlay(locatorOf);
     const selection = new SelectionHighlight();
 
     // De background kan net herstarten; een gemist bericht is niet erg.
@@ -22,7 +23,7 @@ export default defineContentScript({
     const pickMode = new PickMode(window, {
       onPick: (element) => {
         selection.show(element);
-        send({ type: 'ELEMENT_PICKED', element: describeElement(element, previewLocator) });
+        send({ type: 'ELEMENT_PICKED', element: describeElement(element, locatorOf) });
       },
       onDeactivate: () => {
         overlay.stop();
@@ -49,7 +50,7 @@ export default defineContentScript({
       if (message.type === 'GET_PICKED_ELEMENT') {
         const element = selection.selected;
         const response: PickedElementResponse = {
-          element: element?.isConnected ? describeElement(element, previewLocator) : null,
+          element: element?.isConnected ? describeElement(element, locatorOf) : null,
         };
         sendResponse(response);
       }
