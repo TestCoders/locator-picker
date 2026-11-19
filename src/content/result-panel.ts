@@ -83,7 +83,7 @@ const STYLE = `
   .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
   @media (prefers-color-scheme: dark) {
     .panel { background: #202124; color: #e8eaed; }
-    .element, .meta, .count, .note { color: #9aa0a6; }
+    .element, .context, .meta, .count, .note { color: #9aa0a6; }
     code { background: #303134; }
     .row { border-color: #3c4043; }
     .warning { background: #3c3118; color: #fdd663; }

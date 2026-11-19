@@ -67,7 +67,10 @@ export function buildResult(element: Element, options: BuildResultOptions = {}):
   const root = queryRootOf(element);
 
   const css = cssSelector(element, { testAttributes, detectGeneratedClasses });
-  const xpath = xpathSelector(element, { testAttributes });
+  // XPath werkt niet binnen een shadow root: browsers evalueren het daar niet,
+  // en Playwright en Selenium gaan er met XPath niet doorheen (#23).
+  const inShadowRoot = isInShadowRoot(element);
+  const xpath = inShadowRoot ? null : xpathSelector(element, { testAttributes });
   const best = buildLocator(element, { testAttributes });
 
   const context = contextOf(element, { testAttributes });
