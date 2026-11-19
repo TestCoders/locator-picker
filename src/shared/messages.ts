@@ -1,3 +1,5 @@
+import type { Stability } from '@/engine/stability';
+
 // Berichtcontract tussen background, content script en (later) het resultaatpaneel.
 
 // Serialiseerbare samenvatting van het gekozen element. Het Element zelf blijft
@@ -8,6 +10,8 @@ export type PickedElement = {
   /** Aantal elementen dat `locator` in de pagina vindt; 1 betekent uniek. */
   matchCount: number;
   text: string;
+  /** Kleur, label, icoon en uitleg volgens docs/stabiliteit.md. */
+  stability: Stability;
 };
 
 export type Message =

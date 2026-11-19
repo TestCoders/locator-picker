@@ -2,6 +2,7 @@ import { HoverOverlay } from '@/content/hover-overlay';
 import { describeElement } from '@/content/picked-element';
 import { SelectionHighlight } from '@/content/selection-highlight';
 import { buildLocator } from '@/engine/locator-engine';
+import { assessStability } from '@/engine/stability';
 import {
   isMessage,
   type Message,
@@ -14,6 +15,7 @@ export default defineContentScript({
   matches: ['<all_urls>'],
   main(ctx) {
     const locatorOf = (el: Element) => buildLocator(el).locator;
+    const stabilityOf = (el: Element) => assessStability(buildLocator(el));
     const overlay = new HoverOverlay(locatorOf);
     const selection = new SelectionHighlight();
 
@@ -23,7 +25,7 @@ export default defineContentScript({
     const pickMode = new PickMode(window, {
       onPick: (element) => {
         selection.show(element);
-        send({ type: 'ELEMENT_PICKED', element: describeElement(element, locatorOf) });
+        send({ type: 'ELEMENT_PICKED', element: describeElement(element, locatorOf, stabilityOf) });
       },
       onDeactivate: () => {
         overlay.stop();
@@ -50,7 +52,7 @@ export default defineContentScript({
       if (message.type === 'GET_PICKED_ELEMENT') {
         const element = selection.selected;
         const response: PickedElementResponse = {
-          element: element?.isConnected ? describeElement(element, locatorOf) : null,
+          element: element?.isConnected ? describeElement(element, locatorOf, stabilityOf) : null,
         };
         sendResponse(response);
       }
