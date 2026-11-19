@@ -58,7 +58,7 @@ Een `id` is onstabiel als hij op een gegenereerde waarde lijkt:
 - bevat een UUID of hex-hash van 8+ tekens, bijvoorbeeld `:r1a:` of `a3f9c2e81b`;
 - bestaat alleen uit cijfers.
 
-Zo'n `id` is **oranje** (hij is nu uniek, maar verandert bij een rebuild of volgorde-wijziging). Een `id` met korte cijfers die betekenis hebben (`step2`, `h1-title`) blijft **groen**. Open punt voor het team: of oranje hier niet te mild is en rood beter past.
+Zo'n `id` is **oranje** (hij is nu uniek, maar verandert bij een rebuild of volgorde-wijziging). Een `id` met korte cijfers die betekenis hebben (`step2`, `h1-title`) blijft **groen**.
 
 ### `nth-child` en `nth-of-type`
 
