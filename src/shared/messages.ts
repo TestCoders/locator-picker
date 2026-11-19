@@ -1,16 +1,16 @@
-// Berichtcontract tussen popup, background en content script.
+// Berichtcontract tussen background en content script.
 
 export type Message =
-  | { type: 'PING'; from: 'popup' | 'background' }
-  | { type: 'HELLO'; from: 'content' };
+  | { type: 'TOGGLE_PICK_MODE' }
+  | { type: 'PICK_MODE_CHANGED'; active: boolean };
 
-export type PingResponse = { type: 'PONG'; from: 'content' | 'background'; url?: string };
+export type ToggleResponse = { active: boolean };
 
 export function isMessage(value: unknown): value is Message {
   return (
     typeof value === 'object' &&
     value !== null &&
     'type' in value &&
-    (value.type === 'PING' || value.type === 'HELLO')
+    (value.type === 'TOGGLE_PICK_MODE' || value.type === 'PICK_MODE_CHANGED')
   );
 }
