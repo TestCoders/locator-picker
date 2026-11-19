@@ -26,4 +26,6 @@ Zie [ADR 0001](docs/adr/0001-techstack.md) voor de techstack en mapstructuur.
 
 Klik op het extensie-icoon om de pick-modus op de actieve tab aan te zetten; de badge toont dan **AAN**. Nogmaals klikken of **Esc** zet hem weer uit. Navigeren naar een andere pagina zet de modus ook uit.
 
+In pick-modus kiest een klik het element onder de muis; de klik bereikt de pagina niet, dus links, knoppen en formulieren doen niets. Het gekozen element houdt een groene highlight en de pick-modus gaat uit. Zet de modus opnieuw aan om een ander element te kiezen.
+
 Tabs die al open stonden voordat de extensie geladen werd, moeten eerst herladen worden.
