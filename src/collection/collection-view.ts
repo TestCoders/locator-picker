@@ -1,6 +1,7 @@
 // Exportpagina voor het page object (issue #21): lijst van verzamelde
 // locators met aanpasbare veldnamen, klassenaam en een live voorbeeld.
 
+import type { NameSuggestion, NamingContext } from '@/engine/page-object/ai-naming';
 import { suggestClassName } from '@/engine/page-object/naming';
 import {
   generatePlaywrightPageObject,
@@ -20,9 +21,19 @@ export type CollectionViewOptions = {
   copy: (text: string) => Promise<void>;
   download: (fileName: string, content: string) => void;
   confirm: (question: string) => boolean;
+  /** AI-naamsuggestie (#25); zonder deze optie toont de pagina de knop niet. */
+  suggestName?: (hints: NamingContext) => Promise<NameSuggestion>;
+  /** Volgt of AI-suggesties aan staan; geeft een functie om te stoppen. */
+  watchAiEnabled?: (callback: (enabled: boolean) => void) => () => void;
 };
 
-type Row = { item: CollectedLocator; li: HTMLLIElement; input: HTMLInputElement; error: HTMLElement };
+type Row = {
+  item: CollectedLocator;
+  li: HTMLLIElement;
+  input: HTMLInputElement;
+  error: HTMLElement;
+  suggest: HTMLButtonElement;
+};
 
 const STATUS_MS = 2000;
 
@@ -31,6 +42,7 @@ export class CollectionView {
   private readonly rows = new Map<string, Row>();
   /** null zolang de gebruiker de klassenaam niet heeft aangepast: dan volgt hij de paginatitel. */
   private customClassName: string | null = null;
+  private aiEnabled = false;
   private statusTimer: ReturnType<typeof setTimeout> | undefined;
 
   private readonly classInput: HTMLInputElement;
@@ -92,8 +104,15 @@ export class CollectionView {
   /** Laadt de verzameling en volgt wijzigingen uit andere tabs. Geeft een functie om te stoppen. */
   async start(): Promise<() => void> {
     const unwatch = collectionItem.watch((items) => this.setItems(items ?? []));
+    const unwatchAi = this.options.watchAiEnabled?.((enabled) => {
+      this.aiEnabled = enabled;
+      for (const row of this.rows.values()) this.updateSuggestButton(row);
+    });
     this.setItems(await getCollection());
-    return unwatch;
+    return () => {
+      unwatch();
+      unwatchAi?.();
+    };
   }
 
   private setItems(items: CollectedLocator[]): void {
@@ -109,6 +128,7 @@ export class CollectionView {
     for (const item of items) {
       const row = this.rows.get(item.id) ?? this.createRow(item);
       row.item = item;
+      this.updateSuggestButton(row);
       // Niet overschrijven terwijl de gebruiker in dit veld typt.
       if (document.activeElement !== row.input) row.input.value = item.name;
       this.list.append(row.li); // houdt de volgorde gelijk aan de verzameling
@@ -152,14 +172,53 @@ export class CollectionView {
     error.className = 'error';
     error.id = errorId;
 
+    const suggest = document.createElement('button');
+    suggest.type = 'button';
+    suggest.className = 'suggest secondary';
+    suggest.textContent = 'AI-suggestie';
+    suggest.setAttribute('aria-label', `AI-suggestie voor de naam van ${item.description}`);
+
     const nameCell = document.createElement('div');
     nameCell.className = 'name';
     nameCell.append(input, error);
-    li.append(nameCell, description, code, remove);
+    const actions = document.createElement('div');
+    actions.className = 'row-actions';
+    actions.append(suggest, remove);
+    li.append(nameCell, description, code, actions);
 
-    const row: Row = { item, li, input, error };
+    const row: Row = { item, li, input, error, suggest };
+    suggest.addEventListener('click', () => void this.suggestName(row));
     this.rows.set(item.id, row);
+    this.updateSuggestButton(row);
     return row;
+  }
+
+  private updateSuggestButton(row: Row): void {
+    row.suggest.hidden = !this.options.suggestName || !this.aiEnabled;
+    // Items van vóór #25 hebben geen gegevens voor een suggestie.
+    row.suggest.disabled = !row.item.hints;
+  }
+
+  private async suggestName(row: Row): Promise<void> {
+    const { hints } = row.item;
+    if (!hints || !this.options.suggestName) return;
+    row.suggest.disabled = true;
+    row.suggest.textContent = 'Bezig…';
+    try {
+      const suggestion = await this.options.suggestName(hints);
+      // Het voorstel staat in het veld en blijft aanpasbaar.
+      row.input.value = suggestion.name;
+      await renameInCollection(row.item.id, suggestion.name);
+      this.update();
+      this.showStatus(
+        suggestion.source === 'ai'
+          ? `AI-suggestie: ${suggestion.name}`
+          : `${suggestion.reason}; regelgebaseerde naam: ${suggestion.name}`,
+      );
+    } finally {
+      row.suggest.textContent = 'AI-suggestie';
+      this.updateSuggestButton(row);
+    }
   }
 
   /** Klassenaam: aangepast door de gebruiker, anders afgeleid van de eerste paginatitel. */

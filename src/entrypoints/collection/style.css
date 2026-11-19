@@ -45,7 +45,7 @@ ol.fields { margin: 0; padding: 0; list-style: none; }
 .field .name { grid-column: 1; grid-row: 1 / span 2; }
 .field .description { grid-column: 2; grid-row: 1; color: #5f6368; overflow-wrap: anywhere; }
 .field code { grid-column: 2; grid-row: 2; justify-self: start; overflow-wrap: anywhere; }
-.field .remove { grid-column: 3; grid-row: 1; }
+.field .row-actions { grid-column: 3; grid-row: 1; display: flex; gap: 4px; }
 
 code, pre {
   font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;

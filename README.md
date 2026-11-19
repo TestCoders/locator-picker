@@ -72,6 +72,15 @@ export class LoginPage {
 - De lijst staat in `chrome.storage.session`: hij blijft bewaard zolang de browser open is en verdwijnt bij afsluiten.
 - Een unit test compileert de export met `tsc` tegen de types van `@playwright/test`. Een E2E-test verzamelt via het paneel, importeert de geëxporteerde klasse en gebruikt hem tegen de testsite.
 
+### AI-naamsuggesties (optioneel)
+
+Op de exportpagina van het page object geeft de knop **AI-suggestie** per veld een naam van Claude (`claude-opus-5-5`, effort `low`), bijvoorbeeld `placeOrderButton`. De naam blijft daarna aanpasbaar.
+
+- **Standaard uit.** Zet het aan bij **Opties → AI-naamsuggesties** en vul je eigen Anthropic API-sleutel in. Bij het aanzetten vraagt de browser toestemming voor `https://api.anthropic.com/*`; bij uitzetten trekt de extensie die weer in.
+- **Wat de browser verlaat**, en alleen als je op de knop klikt: de tag, de rol, de toegankelijke naam of zichtbare tekst, de waarde van het testattribuut, het id en de paginatitel (tekst ingekort tot 80 tekens). Nooit de URL, de HTML, ingevulde formulierwaarden of andere elementen. De lijst staat ook op de optiespagina en wordt in `src/engine/page-object/ai-naming.ts` vastgelegd en getest.
+- **De sleutel** staat in `chrome.storage.local` (niet gesynchroniseerd) en alleen de background gebruikt hem.
+- **Zonder AI** (uit, geen sleutel, geen toestemming, een fout, een weigering of een ongeldige naam) krijg je de regelgebaseerde naam, met de reden erbij.
+
 ## Snippets
 
 ### Playwright

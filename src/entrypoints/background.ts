@@ -1,4 +1,5 @@
 import { handleCollectionMessage } from '@/shared/collection';
+import { handleSuggestNameMessage } from '@/shared/ai-suggest';
 import { isMessage, type Message, type ToggleResponse } from '@/shared/messages';
 
 // De background bewaart zelf geen status: het content script is de bron van
@@ -33,6 +34,11 @@ export default defineBackground(() => {
   // Page object (#21): alle wijzigingen aan de verzameling, één voor één.
   browser.runtime.onMessage.addListener((message: unknown, _sender, sendResponse) =>
     handleCollectionMessage(message, sendResponse),
+  );
+
+  // AI-naamsuggestie (#25): alleen de background gebruikt de API-sleutel.
+  browser.runtime.onMessage.addListener((message: unknown, _sender, sendResponse) =>
+    handleSuggestNameMessage(message, sendResponse),
   );
 
   browser.runtime.onMessage.addListener((message: unknown, sender) => {

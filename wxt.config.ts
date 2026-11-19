@@ -9,6 +9,8 @@ export default defineConfig({
     // Minimale rechten. Het content script wordt via content_scripts.matches
     // geïnjecteerd; storage is nodig voor de optiespagina (testattribuut).
     permissions: ['storage'],
+    // Alleen gevraagd als de gebruiker AI-naamsuggesties aanzet (#25).
+    optional_host_permissions: ['https://api.anthropic.com/*'],
     action: {
       default_title: 'Locator Picker',
     },

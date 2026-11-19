@@ -136,3 +136,65 @@ describe('exportpagina', () => {
     await vi.waitFor(() => expect(nameInputs()).toHaveLength(0));
   });
 });
+
+describe('exportpagina: AI-suggestie (#25)', () => {
+  const hints = { tagName: 'button', role: 'button', name: 'Inloggen', pageTitle: 'Inloggen' };
+  let setAi: (enabled: boolean) => void;
+
+  async function seedWithHints(): Promise<void> {
+    await addToCollection({ name: 'loginButton', snippet: "page.getByTestId('login')", description: '<button> “Inloggen”', pageTitle: 'Inloggen', hints });
+    await addToCollection({ name: 'oud', snippet: "page.locator('#oud')", description: '<p>', pageTitle: 'Inloggen' });
+  }
+
+  beforeEach(() => {
+    options.suggestName = vi.fn().mockResolvedValue({ name: 'submitLoginButton', source: 'ai' });
+    options.watchAiEnabled = (callback) => {
+      setAi = callback;
+      callback(false);
+      return () => {};
+    };
+  });
+
+  const suggestButtons = () => Array.from(app.querySelectorAll<HTMLButtonElement>('button.suggest'));
+
+  it('toont de knop alleen als AI aan staat', async () => {
+    await seedWithHints();
+    await startView();
+    expect(suggestButtons().every((b) => b.hidden)).toBe(true);
+
+    setAi(true);
+
+    expect(suggestButtons().map((b) => b.hidden)).toEqual([false, false]);
+    // Items zonder gegevens voor een suggestie (van vóór #25) kunnen niet.
+    expect(suggestButtons().map((b) => b.disabled)).toEqual([false, true]);
+  });
+
+  it('vult de suggestie in; die blijft aanpasbaar en wordt bewaard', async () => {
+    await seedWithHints();
+    await startView();
+    setAi(true);
+
+    suggestButtons()[0]!.click();
+
+    await vi.waitFor(() => expect(nameInputs()[0]!.value).toBe('submitLoginButton'));
+    expect(options.suggestName).toHaveBeenCalledWith(hints);
+    expect(q('.status').textContent).toBe('AI-suggestie: submitLoginButton');
+    expect(output()).toContain('readonly submitLoginButton: Locator;');
+    await vi.waitFor(async () => expect((await getCollection())[0]!.name).toBe('submitLoginButton'));
+
+    type(nameInputs()[0]!, 'loginKnop');
+    expect(output()).toContain('readonly loginKnop: Locator;');
+  });
+
+  it('meldt het als er een regelgebaseerde naam terugkomt', async () => {
+    options.suggestName = vi.fn().mockResolvedValue({ name: 'inloggenButton', source: 'rules', reason: 'AI niet bereikbaar' });
+    await seedWithHints();
+    await startView();
+    setAi(true);
+
+    suggestButtons()[0]!.click();
+
+    await vi.waitFor(() => expect(q('.status').textContent).toBe('AI niet bereikbaar; regelgebaseerde naam: inloggenButton'));
+    expect(nameInputs()[0]!.value).toBe('inloggenButton');
+  });
+});

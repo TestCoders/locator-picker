@@ -9,6 +9,7 @@
 // anders overschrijven.
 
 import { storage } from 'wxt/utils/storage';
+import type { NamingContext } from '@/engine/page-object/ai-naming';
 import { uniqueNames } from '@/engine/page-object/naming';
 
 export type CollectedLocator = {
@@ -20,6 +21,8 @@ export type CollectedLocator = {
   /** Korte omschrijving voor de lijst, bijv. `<button> “Inloggen”`. */
   description: string;
   pageTitle: string;
+  /** Gegevens voor een naamsuggestie (#25); ontbreekt bij items van vóór die versie. */
+  hints?: NamingContext;
 };
 
 export type AddResult = { added: boolean; count: number };
