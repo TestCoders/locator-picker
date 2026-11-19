@@ -36,3 +36,17 @@ describe('buildResult', () => {
     expect(result.durationMs).toBe(5);
   });
 });
+
+describe('buildResult: testhook-waarschuwing', () => {
+  it('waarschuwt bij een element zonder testattribuut, id en naam', () => {
+    document.body.innerHTML = '<form><div class="x">Totaal</div></form>';
+    const result = buildResult(document.querySelector('div')!);
+    expect(result.warning?.suggestion).toBe('data-testid="form-totaal"');
+  });
+
+  it('waarschuwt niet bij een element met testattribuut', () => {
+    document.body.innerHTML = '<div data-testid="total">Totaal</div>';
+    expect(buildResult(document.querySelector('div')!).warning).toBeUndefined();
+  });
+});
+
