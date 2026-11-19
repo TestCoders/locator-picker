@@ -19,7 +19,12 @@ import {
 import { addToCollection } from '@/shared/collection';
 import { domainOf, entryFromResult, recordPick } from '@/shared/history';
 import { PickMode } from '@/shared/pick-mode';
-import { DEFAULT_TEST_ATTRIBUTE, watchTestAttribute } from '@/shared/settings';
+import {
+  DEFAULT_DETECT_GENERATED_CLASSES,
+  DEFAULT_TEST_ATTRIBUTE,
+  watchDetectGeneratedClasses,
+  watchTestAttribute,
+} from '@/shared/settings';
 
 export default defineContentScript({
   matches: ['<all_urls>'],
@@ -29,6 +34,11 @@ export default defineContentScript({
     let testAttributes = testAttributeOrder(DEFAULT_TEST_ATTRIBUTE);
     const unwatchSettings = watchTestAttribute((value) => {
       testAttributes = testAttributeOrder(value);
+    });
+    // Gegenereerde classes vermijden (optiespagina); uit bij valse positieven.
+    let detectGeneratedClasses = DEFAULT_DETECT_GENERATED_CLASSES;
+    const unwatchClassOption = watchDetectGeneratedClasses((value) => {
+      detectGeneratedClasses = value;
     });
 
     const locatorOf = (el: Element) => buildLocator(el, { testAttributes }).locator;
@@ -49,7 +59,7 @@ export default defineContentScript({
       onPick: (element) => {
         const pickedAt = performance.now();
         selection.show(element);
-        const result = buildResult(element, { testAttributes });
+        const result = buildResult(element, { testAttributes, detectGeneratedClasses });
         const best = buildLocator(element, { testAttributes });
         panel.show(result, pickedAt, {
           collect: () =>
@@ -101,6 +111,7 @@ export default defineContentScript({
     // Extensie herladen of uitgeschakeld: opruimen.
     ctx.onInvalidated(() => {
       unwatchSettings();
+      unwatchClassOption();
       pickMode.stop();
       overlay.stop();
       selection.clear();

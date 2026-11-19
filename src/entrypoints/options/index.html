@@ -17,6 +17,18 @@
           </p>
           <div id="choices"></div>
         </fieldset>
+        <fieldset>
+          <legend>Gegenereerde class-namen</legend>
+          <p class="hint">
+            Classes die op een hash lijken (zoals <code>css-1q2w3e</code> of <code>Button_root__x7Yz2</code>)
+            breken bij de volgende build en komen daarom niet in een locator. Zet dit uit als een class ten
+            onrechte wordt overgeslagen.
+          </p>
+          <label>
+            <input type="checkbox" id="detect-classes" />
+            Gegenereerde classes herkennen en vermijden
+          </label>
+        </fieldset>
         <p id="status" role="status" aria-live="polite"></p>
       </form>
       <section id="history-section" aria-labelledby="history-title">

@@ -32,13 +32,27 @@ export type CollectionOp =
 
 export type CollectionMessage = { type: 'COLLECTION_OP'; op: CollectionOp };
 
-/** Alleen extensiepagina's en de background lezen dit direct; content scripts gaan via berichten. */
-export const collectionItem = storage.defineItem<CollectedLocator[]>('session:pageObjectCollection', {
-  fallback: [],
-});
+let item: ReturnType<typeof defineCollectionItem> | null = null;
+
+function defineCollectionItem() {
+  return storage.defineItem<CollectedLocator[]>('session:pageObjectCollection', { fallback: [] });
+}
+
+/**
+ * Het opslag-item, pas gedefinieerd bij het eerste gebruik (#59). WXT leest de
+ * opslag al bij defineItem, en het content script importeert deze module ook
+ * (voor addToCollection). Content scripts mogen niet bij storage.session; een
+ * definitie op moduleniveau gaf daardoor op elke pagina een fout in de console.
+ *
+ * Alleen de background en extensiepagina's roepen dit aan; content scripts gaan
+ * via berichten.
+ */
+export function collectionStorage(): ReturnType<typeof defineCollectionItem> {
+  return (item ??= defineCollectionItem());
+}
 
 export async function getCollection(): Promise<CollectedLocator[]> {
-  return collectionItem.getValue();
+  return collectionStorage().getValue();
 }
 
 // --- Aanroepen vanuit content script en exportpagina -------------------------
@@ -97,17 +111,17 @@ async function apply(op: CollectionOp): Promise<AddResult | null> {
       if (items.some((existing) => existing.snippet === op.item.snippet)) return { added: false, count: items.length };
       const name = uniqueNames([...items.map((i) => i.name), op.item.name]).at(-1)!;
       const next = [...items, { ...op.item, id: crypto.randomUUID(), name }];
-      await collectionItem.setValue(next);
+      await collectionStorage().setValue(next);
       return { added: true, count: next.length };
     }
     case 'rename':
-      await collectionItem.setValue(items.map((item) => (item.id === op.id ? { ...item, name: op.name } : item)));
+      await collectionStorage().setValue(items.map((item) => (item.id === op.id ? { ...item, name: op.name } : item)));
       return null;
     case 'remove':
-      await collectionItem.setValue(items.filter((item) => item.id !== op.id));
+      await collectionStorage().setValue(items.filter((item) => item.id !== op.id));
       return null;
     case 'clear':
-      await collectionItem.setValue([]);
+      await collectionStorage().setValue([]);
       return null;
   }
 }

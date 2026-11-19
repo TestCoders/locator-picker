@@ -9,7 +9,7 @@ import {
 } from '@/engine/page-object/playwright';
 import {
   clearCollection,
-  collectionItem,
+  collectionStorage,
   getCollection,
   removeFromCollection,
   renameInCollection,
@@ -91,7 +91,7 @@ export class CollectionView {
 
   /** Laadt de verzameling en volgt wijzigingen uit andere tabs. Geeft een functie om te stoppen. */
   async start(): Promise<() => void> {
-    const unwatch = collectionItem.watch((items) => this.setItems(items ?? []));
+    const unwatch = collectionStorage().watch((items) => this.setItems(items ?? []));
     this.setItems(await getCollection());
     return unwatch;
   }

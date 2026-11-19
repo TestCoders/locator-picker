@@ -15,6 +15,37 @@ describe('cssSelector: fixtures', () => {
   });
 });
 
+describe('cssSelector: gegenereerde classes (#26)', () => {
+  const html = '<div id="list"><p class="css-1q2w3e">a</p><p>b</p></div>';
+
+  function pick(): Element {
+    document.body.innerHTML = html;
+    return document.querySelector('p')!;
+  }
+
+  it('gebruikt een gegenereerde class niet', () => {
+    const el = pick();
+    const selector = cssSelector(el);
+    expect(selector).not.toContain('css-1q2w3e');
+    expect(Array.from(document.querySelectorAll(selector))).toEqual([el]);
+  });
+
+  it('gebruikt hem wel als herkenning uit staat', () => {
+    const el = pick();
+    expect(cssSelector(el, { detectGeneratedClasses: false })).toBe('p.css-1q2w3e');
+  });
+
+  it('gebruikt een stabiele class naast een gegenereerde', () => {
+    document.body.innerHTML = '<div><p class="css-1q2w3e title">a</p><p>b</p></div>';
+    expect(cssSelector(document.querySelector('p')!)).toBe('p.title');
+  });
+
+  it('vermijdt state-classes ook als herkenning uit staat', () => {
+    document.body.innerHTML = '<div><p class="active">a</p><p>b</p></div>';
+    expect(cssSelector(document.querySelector('p')!, { detectGeneratedClasses: false })).not.toContain('active');
+  });
+});
+
 describe('escapeIdentifier', () => {
   it.each([
     ['simple', 'simple'],
