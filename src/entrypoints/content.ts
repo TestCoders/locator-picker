@@ -17,6 +17,7 @@ import {
   type ToggleResponse,
 } from '@/shared/messages';
 import { addToCollection } from '@/shared/collection';
+import { domainOf, entryFromResult, recordPick } from '@/shared/history';
 import { PickMode } from '@/shared/pick-mode';
 import { DEFAULT_TEST_ATTRIBUTE, watchTestAttribute } from '@/shared/settings';
 
@@ -60,6 +61,8 @@ export default defineContentScript({
             }),
           openCollection: () => send({ type: 'OPEN_COLLECTION' }),
         });
+        // Historie is een extra: een fout (bijvoorbeeld een herladen extensie) mag het paneel niet breken.
+        void recordPick(domainOf(window.location), entryFromResult(result)).catch(() => {});
         send({ type: 'ELEMENT_PICKED', element: describeElement(element, locatorOf, stabilityOf) });
       },
       onDeactivate: () => {

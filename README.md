@@ -39,6 +39,14 @@ Klik met de rechtermuisknop op het extensie-icoon en kies **Opties** (of via `ch
 
 De Playwright-snippet gebruikt `getByTestId` alleen voor `data-testid`, de standaard van Playwright. Andere attributen worden `page.locator('[data-cy="..."]')`.
 
+### Historie
+
+Elk gekozen element komt in de historie van het domein waarop je het koos. Open de historie via **Opties** (zie hierboven): per domein staan de locators met het nieuwste bovenaan. Elk item heeft knoppen om de CSS-selector, XPath of Playwright-snippet te kopiëren. **Wissen** leegt één domein en **Alles wissen** de hele historie.
+
+- Per domein bewaart de extensie maximaal 50 items. Kies je hetzelfde element opnieuw, dan verhuist het naar boven in plaats van dubbel te staan; bij het 51e item valt het oudste weg.
+- De historie staat in `chrome.storage.local`: alleen in deze browser en niet gesynchroniseerd naar andere apparaten.
+- Pagina's zonder hostnaam, zoals `file://`, komen niet in de historie.
+
 ### Page object exporteren
 
 Klik in het resultaatpaneel op **+ Page object** om de Playwright-locator van het gekozen element te verzamelen. Doe dat voor zoveel elementen als je wilt, ook op andere pagina's en in andere tabs. **Exporteren** opent een pagina met alle verzamelde locators: pas daar de veldnamen en de klassenaam aan, en kopieer of download de klasse.
